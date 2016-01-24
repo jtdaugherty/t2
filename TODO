@@ -4,3 +4,8 @@ Increments:
 - OpenCL kernel to mess with color buffer, main() to set that up
 - OpenCL kernel to mess with color buffer (initially all black, set to
 white) and GLFW main() to display it in a window
+
+Other:
+- Command-line argument processing to set
+  * log level and destination
+  * device preference (e.g. cpu vs gpu)
