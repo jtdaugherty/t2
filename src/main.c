@@ -12,6 +12,7 @@
 #define MAX_SOURCE_SIZE (0x20000)
 
 #define MAX_DEVICES 10
+#define MAX_PLATFORMS 10
 
 // Log levels
 #define LOG_ERROR    (1 << 0)
@@ -76,12 +77,14 @@ cl_program readAndBuildProgram(cl_context context, cl_device_id device_id, const
 int main()
 {
 	cl_device_id device_ids[MAX_DEVICES];
+    cl_device_id device_id;
 	cl_context context = NULL;
 	cl_command_queue command_queue = NULL;
 	cl_mem memobj = NULL;
 	cl_program program = NULL;
 	cl_kernel kernel = NULL;
-	cl_platform_id platform_id = NULL;
+	cl_platform_id platform_ids[MAX_PLATFORMS];
+    cl_platform_id platform_id;
 	cl_uint ret_num_devices;
 	cl_uint ret_num_platforms;
 	cl_int ret;
@@ -89,26 +92,59 @@ int main()
 	char string[MEM_SIZE];
 
 	/* Get Platform and Device Info */
-	ret = clGetPlatformIDs(1, &platform_id, &ret_num_platforms);
-    log_info("Number of platforms: %d", ret_num_platforms);
+	ret = clGetPlatformIDs(MAX_PLATFORMS, platform_ids, &ret_num_platforms);
+    log_info("Found %d platform(s)", ret_num_platforms);
+
+    if (ret_num_platforms < 1) {
+        log_error("Could not find suitable platform");
+        exit(1);
+    }
+
+    platform_id = platform_ids[0];
+
+    char platform_profile[64];
+    size_t profile_size;
+    ret = clGetPlatformInfo(platform_id, CL_PLATFORM_PROFILE, 64, platform_profile, &profile_size);
+    if (ret) {
+        log_error("Failed to get platform profile, ret %d", ret);
+        exit(1);
+    }
+
+    log_info("Platform profile returned %ld bytes", profile_size);
+    log_info("Platform profile: %s", platform_profile);
 
 	ret = clGetDeviceIDs(platform_id, CL_DEVICE_TYPE_ALL, MAX_DEVICES, device_ids, &ret_num_devices);
-    log_info("Number of CPU devices: %d", ret_num_devices);
+    log_info("Found %d CPU devices", ret_num_devices);
 
-	ret = clGetDeviceIDs(platform_id, CL_DEVICE_TYPE_GPU, MAX_DEVICES, device_ids, &ret_num_devices);
-    log_info("Number of GPU devices: %d", ret_num_devices);
+    if (ret_num_devices < 1) {
+        log_error("Failed to find a qualifying device!");
+        exit(1);
+    }
+
+    device_id = device_ids[0];
+
+    char extension_list[1024];
+    size_t ext_size;
+    ret = clGetDeviceInfo(device_id, CL_DEVICE_EXTENSIONS, 1024, extension_list, &ext_size);
+    if (ret) {
+        log_error("Failed to get device info, ret %d", ret);
+        exit(1);
+    }
+
+    log_info("Extensions returned %ld bytes", ext_size);
+    log_info("Extensions: %s", extension_list);
 
 	/* Create OpenCL context */
-	context = clCreateContext(NULL, 1, &device_ids[0], NULL, NULL, &ret);
+	context = clCreateContext(NULL, 1, &device_id, NULL, NULL, &ret);
 
 	/* Create Command Queue */
-	command_queue = clCreateCommandQueue(context, device_ids[0], 0, &ret);
+	command_queue = clCreateCommandQueue(context, device_id, 0, &ret);
 
 	/* Create Memory Buffer */
 	memobj = clCreateBuffer(context, CL_MEM_READ_WRITE,MEM_SIZE * sizeof(char), NULL, &ret);
 
 	/* Create Kernel Program from the source */
-	program = readAndBuildProgram(context, device_ids[0], "cl/t2.cl", &ret);
+	program = readAndBuildProgram(context, device_id, "cl/t2.cl", &ret);
     if (!program) {
         log_error("readAndBuildProgram failed, ret %d", ret);
         exit(1);
