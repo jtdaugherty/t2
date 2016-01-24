@@ -1,6 +1,3 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
 #include <t2/logging.h>
 #include <t2/info.h>
@@ -15,8 +12,6 @@
  
 #define MEM_SIZE (128)
 #define MAX_SOURCE_SIZE (0x20000)
-
-#define MAX_DEVICES 10
 
 int global_log_level = LOG_DEBUG;
 
