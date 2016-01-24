@@ -85,54 +85,51 @@ int main()
 	cl_kernel kernel = NULL;
 	cl_platform_id platform_ids[MAX_PLATFORMS];
     cl_platform_id platform_id;
-	cl_uint ret_num_devices;
-	cl_uint ret_num_platforms;
+	cl_uint ret_num;
 	cl_int ret;
 
 	char string[MEM_SIZE];
 
 	/* Get Platform and Device Info */
-	ret = clGetPlatformIDs(MAX_PLATFORMS, platform_ids, &ret_num_platforms);
-    log_info("Found %d platform(s)", ret_num_platforms);
+	ret = clGetPlatformIDs(MAX_PLATFORMS, platform_ids, &ret_num);
+    log_info("Found %d platform(s)", ret_num);
 
-    if (ret_num_platforms < 1) {
+    if (ret_num < 1) {
         log_error("Could not find suitable platform");
         exit(1);
     }
 
+    log_info("Using first platform");
     platform_id = platform_ids[0];
 
     char platform_profile[64];
-    size_t profile_size;
-    ret = clGetPlatformInfo(platform_id, CL_PLATFORM_PROFILE, 64, platform_profile, &profile_size);
+    ret = clGetPlatformInfo(platform_id, CL_PLATFORM_PROFILE, 64, platform_profile, NULL);
     if (ret) {
         log_error("Failed to get platform profile, ret %d", ret);
         exit(1);
     }
 
-    log_info("Platform profile returned %ld bytes", profile_size);
     log_info("Platform profile: %s", platform_profile);
 
-	ret = clGetDeviceIDs(platform_id, CL_DEVICE_TYPE_ALL, MAX_DEVICES, device_ids, &ret_num_devices);
-    log_info("Found %d CPU devices", ret_num_devices);
+	ret = clGetDeviceIDs(platform_id, CL_DEVICE_TYPE_ALL, MAX_DEVICES, device_ids, &ret_num);
+    log_info("Found %d CPU devices", ret_num);
 
-    if (ret_num_devices < 1) {
+    if (ret_num < 1) {
         log_error("Failed to find a qualifying device!");
         exit(1);
     }
 
+    log_info("Using first CPU device");
     device_id = device_ids[0];
 
     char extension_list[1024];
-    size_t ext_size;
-    ret = clGetDeviceInfo(device_id, CL_DEVICE_EXTENSIONS, 1024, extension_list, &ext_size);
+    ret = clGetDeviceInfo(device_id, CL_DEVICE_EXTENSIONS, 1024, extension_list, NULL);
     if (ret) {
         log_error("Failed to get device info, ret %d", ret);
         exit(1);
     }
 
-    log_info("Extensions returned %ld bytes", ext_size);
-    log_info("Extensions: %s", extension_list);
+    log_info("Device extensions: %s", extension_list);
 
 	/* Create OpenCL context */
 	context = clCreateContext(NULL, 1, &device_id, NULL, NULL, &ret);
