@@ -8,9 +8,9 @@
 
 cl_device_id chooseDevice(cl_platform_id platform_id) {
     cl_uint ret_num;
-	cl_device_id device_ids[MAX_DEVICES];
+    cl_device_id device_ids[MAX_DEVICES];
 
-	cl_int ret = clGetDeviceIDs(platform_id, CL_DEVICE_TYPE_ALL, MAX_DEVICES, device_ids, &ret_num);
+    cl_int ret = clGetDeviceIDs(platform_id, CL_DEVICE_TYPE_ALL, MAX_DEVICES, device_ids, &ret_num);
     if (ret) {
         log_error("Could not get device IDs, ret %d", ret);
         return NULL;
