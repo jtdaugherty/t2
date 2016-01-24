@@ -1,6 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include <t2/logging.h>
+#include <t2/info.h>
+#include <t2/platform.h>
+#include <t2/device.h>
  
 #ifdef __APPLE__
 #include <OpenCL/opencl.h>
@@ -12,26 +17,8 @@
 #define MAX_SOURCE_SIZE (0x20000)
 
 #define MAX_DEVICES 10
-#define MAX_PLATFORMS 10
-
-// Log levels
-#define LOG_ERROR    (1 << 0)
-#define LOG_WARN     (1 << 1)
-#define LOG_INFO     (1 << 2)
-#define LOG_DEBUG    (1 << 3)
 
 int global_log_level = LOG_DEBUG;
-
-#define do_log(level, level_str, fmt, ...) do { \
-    if (level <= global_log_level) { \
-        fprintf(stderr, "[" level_str "] "); \
-        fprintf(stderr, fmt, ##__VA_ARGS__); \
-        fprintf(stderr, "\n"); \
-    } \
-    } while (0)
-
-#define log_error(fmt, ...) do_log(LOG_ERROR, "ERROR", fmt, ##__VA_ARGS__)
-#define log_info(fmt, ...)  do_log(LOG_INFO,  "INFO",  fmt, ##__VA_ARGS__)
 
 cl_program readAndBuildProgram(cl_context context, cl_device_id device_id, const char *path, int *res) {
     int ret;
@@ -76,60 +63,22 @@ cl_program readAndBuildProgram(cl_context context, cl_device_id device_id, const
  
 int main()
 {
-	cl_device_id device_ids[MAX_DEVICES];
     cl_device_id device_id;
 	cl_context context = NULL;
 	cl_command_queue command_queue = NULL;
 	cl_mem memobj = NULL;
 	cl_program program = NULL;
 	cl_kernel kernel = NULL;
-	cl_platform_id platform_ids[MAX_PLATFORMS];
     cl_platform_id platform_id;
-	cl_uint ret_num;
 	cl_int ret;
 
 	char string[MEM_SIZE];
 
-	/* Get Platform and Device Info */
-	ret = clGetPlatformIDs(MAX_PLATFORMS, platform_ids, &ret_num);
-    log_info("Found %d platform(s)", ret_num);
+    platform_id = choosePlatform();
+    logPlatformInfo(platform_id);
 
-    if (ret_num < 1) {
-        log_error("Could not find suitable platform");
-        exit(1);
-    }
-
-    log_info("Using first platform");
-    platform_id = platform_ids[0];
-
-    char platform_profile[64];
-    ret = clGetPlatformInfo(platform_id, CL_PLATFORM_PROFILE, 64, platform_profile, NULL);
-    if (ret) {
-        log_error("Failed to get platform profile, ret %d", ret);
-        exit(1);
-    }
-
-    log_info("Platform profile: %s", platform_profile);
-
-	ret = clGetDeviceIDs(platform_id, CL_DEVICE_TYPE_ALL, MAX_DEVICES, device_ids, &ret_num);
-    log_info("Found %d CPU devices", ret_num);
-
-    if (ret_num < 1) {
-        log_error("Failed to find a qualifying device!");
-        exit(1);
-    }
-
-    log_info("Using first CPU device");
-    device_id = device_ids[0];
-
-    char extension_list[1024];
-    ret = clGetDeviceInfo(device_id, CL_DEVICE_EXTENSIONS, 1024, extension_list, NULL);
-    if (ret) {
-        log_error("Failed to get device info, ret %d", ret);
-        exit(1);
-    }
-
-    log_info("Device extensions: %s", extension_list);
+    device_id = chooseDevice(platform_id);
+    logDeviceInfo(device_id);
 
 	/* Create OpenCL context */
 	context = clCreateContext(NULL, 1, &device_id, NULL, NULL, &ret);

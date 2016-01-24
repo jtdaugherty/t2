@@ -1,9 +1,13 @@
 CC = gcc
-CFLAGS = -Wall
+CFLAGS = -Wall -Iinclude
 LIBS = -framework opencl
 PROGNAME = t2
 
-OBJS = src/main.o
+OBJS = \
+       src/main.o \
+       src/info.o \
+       src/platform.o \
+       src/device.o
 
 $(PROGNAME): $(OBJS)
 	gcc $(CFLAGS) -o $(PROGNAME) $(OBJS) $(LIBS)
