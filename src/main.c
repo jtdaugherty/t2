@@ -45,7 +45,7 @@ int main()
 	command_queue = clCreateCommandQueue(context, device_id, 0, &ret);
 
 	/* Create Memory Buffer */
-	memobj = clCreateBuffer(context, CL_MEM_READ_WRITE,MEM_SIZE * sizeof(char), NULL, &ret);
+	memobj = clCreateBuffer(context, CL_MEM_READ_WRITE, MEM_SIZE * sizeof(char), NULL, &ret);
 
 	/* Create Kernel Program from the source */
 	program = readAndBuildProgram(context, device_id, "cl/t2.cl", &ret);
