@@ -6,7 +6,7 @@ PROGNAME = t2
 OBJS = src/main.o
 
 $(PROGNAME): $(OBJS)
-	gcc $(CFLAGS) -o $(PROGNAME) src/main.o $(LIBS)
+	gcc $(CFLAGS) -o $(PROGNAME) $(OBJS) $(LIBS)
 
 clean:
 	rm -f $(PROGNAME) $(OBJS)
