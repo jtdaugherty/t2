@@ -108,7 +108,7 @@ int main()
 	memobj = clCreateBuffer(context, CL_MEM_READ_WRITE,MEM_SIZE * sizeof(char), NULL, &ret);
 
 	/* Create Kernel Program from the source */
-	program = readAndBuildProgram(context, device_ids[0], "t2.cl", &ret);
+	program = readAndBuildProgram(context, device_ids[0], "cl/t2.cl", &ret);
     if (!program) {
         log_error("readAndBuildProgram failed, ret %d", ret);
         exit(1);
