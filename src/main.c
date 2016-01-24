@@ -4,12 +4,7 @@
 #include <t2/platform.h>
 #include <t2/device.h>
 #include <t2/util.h>
- 
-#ifdef __APPLE__
-#include <OpenCL/opencl.h>
-#else
-#include <CL/cl.h>
-#endif
+#include <t2/opencl_setup.h>
  
 #define MEM_SIZE (128)
 

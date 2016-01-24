@@ -2,11 +2,7 @@
 #ifndef T2_DEVICE_H
 #define T2_DEVICE_H
 
-#ifdef __APPLE__
-#include <OpenCL/opencl.h>
-#else
-#include <CL/cl.h>
-#endif
+#include <t2/opencl_setup.h>
 
 cl_device_id chooseDevice(cl_platform_id platform_id);
 
