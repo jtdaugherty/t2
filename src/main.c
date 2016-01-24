@@ -40,12 +40,24 @@ int main()
 
 	/* Create OpenCL context */
 	context = clCreateContext(NULL, 1, &device_id, NULL, NULL, &ret);
+    if (ret) {
+        log_error("Could not create context\n");
+        exit(1);
+    }
 
 	/* Create Command Queue */
 	command_queue = clCreateCommandQueue(context, device_id, 0, &ret);
+    if (ret) {
+        log_error("Could not create command queue\n");
+        exit(1);
+    }
 
 	/* Create Memory Buffer */
 	memobj = clCreateBuffer(context, CL_MEM_READ_WRITE, MEM_SIZE * sizeof(char), NULL, &ret);
+    if (ret) {
+        log_error("Could not create memory buffer\n");
+        exit(1);
+    }
 
 	/* Create Kernel Program from the source */
 	program = readAndBuildProgram(context, device_id, "cl/t2.cl", &ret);
