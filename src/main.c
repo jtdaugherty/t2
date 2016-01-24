@@ -4,6 +4,8 @@
 #include <t2/platform.h>
 #include <t2/device.h>
  
+#include <sys/stat.h>
+
 #ifdef __APPLE__
 #include <OpenCL/opencl.h>
 #else
@@ -21,6 +23,17 @@ cl_program readAndBuildProgram(cl_context context, cl_device_id device_id, const
 	size_t source_size;
     FILE *fp;
     cl_program program;
+    struct stat st;
+
+    if (stat(path, &st)) {
+        log_error("Could not get file size for %s", path);
+        return NULL;
+    }
+
+    if (st.st_size > MAX_SOURCE_SIZE) {
+        log_error("File size %lld exceeds allowed size %d for file %s", st.st_size, MAX_SOURCE_SIZE, path);
+        return NULL;
+    }
 
 	/* Load the source code containing the kernel*/
 	fp = fopen(path, "r");
@@ -29,8 +42,8 @@ cl_program readAndBuildProgram(cl_context context, cl_device_id device_id, const
 		exit(1);
 	}
 
-	source_str = (char*)malloc(MAX_SOURCE_SIZE);
-	source_size = fread(source_str, 1, MAX_SOURCE_SIZE, fp);
+	source_str = (char*)malloc(st.st_size);
+	source_size = fread(source_str, 1, st.st_size, fp);
 	fclose(fp);
     if (source_size == 0) {
         log_error("Error reading file");
