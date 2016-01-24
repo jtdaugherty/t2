@@ -58,22 +58,30 @@ cl_program readAndBuildProgram(cl_context context, cl_device_id device_id, const
  
 int main()
 {
-    cl_device_id device_id;
 	cl_context context = NULL;
+    cl_device_id device_id;
+    cl_platform_id platform_id;
 	cl_command_queue command_queue = NULL;
-	cl_mem memobj = NULL;
 	cl_program program = NULL;
 	cl_kernel kernel = NULL;
-    cl_platform_id platform_id;
+	cl_mem memobj = NULL;
 	cl_int ret;
-
 	char string[MEM_SIZE];
 
+    /* Choose an OpenCL platform */
     platform_id = choosePlatform();
-    logPlatformInfo(platform_id);
+    if (!platform_id) {
+        exit(1);
+    } else {
+        logPlatformInfo(platform_id);
+    }
 
     device_id = chooseDevice(platform_id);
-    logDeviceInfo(device_id);
+    if (!device_id) {
+        exit(1);
+    } else {
+        logDeviceInfo(device_id);
+    }
 
 	/* Create OpenCL context */
 	context = clCreateContext(NULL, 1, &device_id, NULL, NULL, &ret);
