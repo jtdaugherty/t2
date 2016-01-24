@@ -9,9 +9,69 @@
 #endif
  
 #define MEM_SIZE (128)
-#define MAX_SOURCE_SIZE (0x100000)
+#define MAX_SOURCE_SIZE (0x20000)
 
 #define MAX_DEVICES 10
+
+// Log levels
+#define LOG_ERROR    (1 << 0)
+#define LOG_WARN     (1 << 1)
+#define LOG_INFO     (1 << 2)
+#define LOG_DEBUG    (1 << 3)
+
+int global_log_level = LOG_DEBUG;
+
+#define do_log(level, level_str, fmt, ...) do { \
+    if (level <= global_log_level) { \
+        fprintf(stderr, "[" level_str "] "); \
+        fprintf(stderr, fmt, ##__VA_ARGS__); \
+        fprintf(stderr, "\n"); \
+    } \
+    } while (0)
+
+#define log_error(fmt, ...) do_log(LOG_ERROR, "ERROR", fmt, ##__VA_ARGS__)
+#define log_info(fmt, ...)  do_log(LOG_INFO,  "INFO",  fmt, ##__VA_ARGS__)
+
+cl_program readAndBuildProgram(cl_context context, cl_device_id device_id, const char *path, int *res) {
+    int ret;
+	char *source_str;
+	size_t source_size;
+    FILE *fp;
+    cl_program program;
+
+	/* Load the source code containing the kernel*/
+	fp = fopen(path, "r");
+	if (!fp) {
+		log_error("Failed to load kernel.");
+		exit(1);
+	}
+
+	source_str = (char*)malloc(MAX_SOURCE_SIZE);
+	source_size = fread(source_str, 1, MAX_SOURCE_SIZE, fp);
+	fclose(fp);
+    if (source_size == 0) {
+        log_error("Error reading file");
+        free(source_str);
+        return NULL;
+    }
+
+	/* Create Kernel Program from the source */
+	program = clCreateProgramWithSource(context, 1, (const char **)&source_str,
+			(const size_t *)&source_size, &ret);
+    if (ret) {
+        log_error("Could not create program with source, ret %d", ret);
+        return NULL;
+    }
+
+	/* Build Kernel Program */
+	ret = clBuildProgram(program, 1, &device_id, NULL, NULL, NULL);
+    if (ret) {
+        log_error("Error building %s", path);
+        return NULL;
+    } else {
+        return program;
+    }
+}
  
 int main()
 {
@@ -29,30 +89,15 @@ int main()
 	char string[MEM_SIZE];
     memset(string, 'x', MEM_SIZE);
 
-	FILE *fp;
-	char fileName[] = "t2.cl";
-	char *source_str;
-	size_t source_size;
-
-	/* Load the source code containing the kernel*/
-	fp = fopen(fileName, "r");
-	if (!fp) {
-		fprintf(stderr, "Failed to load kernel.\n");
-		exit(1);
-	}
-	source_str = (char*)malloc(MAX_SOURCE_SIZE);
-	source_size = fread(source_str, 1, MAX_SOURCE_SIZE, fp);
-	fclose(fp);
-
 	/* Get Platform and Device Info */
 	ret = clGetPlatformIDs(1, &platform_id, &ret_num_platforms);
-    printf("Number of platforms: %d\n", ret_num_platforms);
+    log_info("Number of platforms: %d", ret_num_platforms);
 
 	ret = clGetDeviceIDs(platform_id, CL_DEVICE_TYPE_ALL, MAX_DEVICES, device_ids, &ret_num_devices);
-    printf("Number of CPU devices: %d\n", ret_num_devices);
+    log_info("Number of CPU devices: %d", ret_num_devices);
 
 	ret = clGetDeviceIDs(platform_id, CL_DEVICE_TYPE_GPU, MAX_DEVICES, device_ids, &ret_num_devices);
-    printf("Number of GPU devices: %d\n", ret_num_devices);
+    log_info("Number of GPU devices: %d", ret_num_devices);
 
 	/* Create OpenCL context */
 	context = clCreateContext(NULL, 1, &device_ids[0], NULL, NULL, &ret);
@@ -64,11 +109,11 @@ int main()
 	memobj = clCreateBuffer(context, CL_MEM_READ_WRITE,MEM_SIZE * sizeof(char), NULL, &ret);
 
 	/* Create Kernel Program from the source */
-	program = clCreateProgramWithSource(context, 1, (const char **)&source_str,
-			(const size_t *)&source_size, &ret);
-
-	/* Build Kernel Program */
-	ret = clBuildProgram(program, 1, &device_ids[0], NULL, NULL, NULL);
+	program = readAndBuildProgram(context, device_ids[0], "t2.cl", &ret);
+    if (!program) {
+        log_error("readAndBuildProgram failed, ret %d", ret);
+        exit(1);
+    }
 
 	/* Create OpenCL Kernel */
 	kernel = clCreateKernel(program, "t2main", &ret);
@@ -98,8 +143,6 @@ int main()
 	ret = clReleaseMemObject(memobj);
 	ret = clReleaseCommandQueue(command_queue);
 	ret = clReleaseContext(context);
-
-	free(source_str);
 
 	return 0;
 }
