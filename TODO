@@ -1,0 +1,6 @@
+Increments:
+
+- Basic opencl kernel (hello world) and main() to set it up
+- OpenCL kernel to mess with color buffer, main() to set that up
+- OpenCL kernel to mess with color buffer (initially all black, set to
+white) and GLFW main() to display it in a window
