@@ -35,6 +35,7 @@ int main()
         logPlatformInfo(platform_id);
     }
 
+    /* Choose an OpenCL device */
     device_id = chooseDevice(platform_id);
     if (!device_id) {
         exit(1);
