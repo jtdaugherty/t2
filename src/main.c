@@ -87,7 +87,6 @@ int main()
 	cl_int ret;
 
 	char string[MEM_SIZE];
-    memset(string, 'x', MEM_SIZE);
 
 	/* Get Platform and Device Info */
 	ret = clGetPlatformIDs(1, &platform_id, &ret_num_platforms);
