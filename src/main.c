@@ -125,9 +125,9 @@ int main()
 	ret = clSetKernelArg(kernel, 0, sizeof(cl_mem), (void *)&memobj);
 
 	/* Execute OpenCL Kernel */
-	ret = clEnqueueTask(command_queue, kernel, 0, NULL,NULL);
+	ret = clEnqueueTask(command_queue, kernel, 0, NULL, NULL);
 
-	/* Copy results from the memory buffer */
+	/* Do a blocking read to copy results from the memory buffer */
 	ret = clEnqueueReadBuffer(command_queue, memobj, CL_TRUE, 0,
 			MEM_SIZE * sizeof(char), string, 0, NULL, NULL);
 
