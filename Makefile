@@ -1,7 +1,12 @@
-all: t2
+CC = gcc
+CFLAGS = -Wall
+LIBS = -framework opencl
+PROGNAME = t2
 
-t2: src/main.c
-	gcc -Wall -o t2 src/main.c -framework opencl
+OBJS = src/main.o
+
+$(PROGNAME): $(OBJS)
+	gcc $(CFLAGS) -o $(PROGNAME) src/main.o $(LIBS)
 
 clean:
-	rm -f t2
+	rm -f $(PROGNAME) $(OBJS)
