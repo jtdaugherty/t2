@@ -57,19 +57,31 @@ int main()
 	/* Create OpenCL Kernel */
 	kernel = clCreateKernel(program, "t2main", &ret);
     if (ret) {
-        printf("Could not create kernel!\n");
+        log_error("Could not create kernel!\n");
         exit(1);
     }
 
 	/* Set OpenCL Kernel Parameters */
 	ret = clSetKernelArg(kernel, 0, sizeof(cl_mem), (void *)&memobj);
+    if (ret) {
+        log_error("Could not set kernel argument\n");
+        exit(1);
+    }
 
 	/* Execute OpenCL Kernel */
 	ret = clEnqueueTask(command_queue, kernel, 0, NULL, NULL);
+    if (ret) {
+        log_error("Could not enqueue task\n");
+        exit(1);
+    }
 
 	/* Do a blocking read to copy results from the memory buffer */
 	ret = clEnqueueReadBuffer(command_queue, memobj, CL_TRUE, 0,
 			MEM_SIZE * sizeof(char), string, 0, NULL, NULL);
+    if (ret) {
+        log_error("Could not enqueue buffer read");
+        exit(1);
+    }
 
 	/* Display Result */
 	puts(string);
