@@ -1,6 +1,6 @@
 all: t2
 
-t2: src/main.c t2.cl
+t2: src/main.c
 	gcc -Wall -o t2 src/main.c -framework opencl
 
 clean:
