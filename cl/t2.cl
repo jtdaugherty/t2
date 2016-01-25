@@ -1,17 +1,10 @@
-__kernel void t2main(__global char* string)
+__kernel void t2main(__write_only image2d_t img)
 {
-    string[0] = 'H';
-    string[1] = 'e';
-    string[2] = 'l';
-    string[3] = 'l';
-    string[4] = 'o';
-    string[5] = ',';
-    string[6] = ' ';
-    string[7] = 'W';
-    string[8] = 'o';
-    string[9] = 'r';
-    string[10] = 'l';
-    string[11] = 'd';
-    string[12] = '!';
-    string[13] = '\0';
+    float4 color = (float4)(255, 255, 255, 255);
+
+    for (int i = 0; i < 640; i++) {
+        for (int j = 0; j < 480; j++) {
+            write_imagef(img, (int2)(i, j), color);
+        }
+    }
 }

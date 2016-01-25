@@ -8,8 +8,6 @@
 #include <t2/util.h>
 #include <t2/opencl_setup.h>
  
-#define MEM_SIZE (128)
-
 int global_log_level = LOG_DEBUG;
 
 static void key_callback(GLFWwindow* window, int key, int scancode,
@@ -39,9 +37,7 @@ int main()
     cl_command_queue command_queue = NULL;
     cl_program program = NULL;
     cl_kernel kernel = NULL;
-    cl_mem memobj = NULL;
     cl_int ret = -1;
-    char string[MEM_SIZE];
 
     /* Choose an OpenCL platform */
     platform_id = choosePlatform();
@@ -73,10 +69,21 @@ int main()
         exit(1);
     }
 
-    /* Create Memory Buffer */
-    memobj = clCreateBuffer(context, CL_MEM_READ_WRITE, MEM_SIZE * sizeof(char), NULL, &ret);
-    if (ret) {
-        log_error("Could not create memory buffer\n");
+    /* Create an OpenCL image */
+    cl_image_format bufFmt = {
+        .image_channel_order = CL_RGBA,
+        .image_channel_data_type = CL_UNSIGNED_INT8
+    };
+
+    cl_image_desc imgDesc = {
+        .image_type = CL_MEM_OBJECT_IMAGE2D,
+        .image_width = 640,
+        .image_height = 480
+    };
+
+    cl_mem imgBuf = clCreateImage(context, CL_MEM_READ_WRITE, &bufFmt, &imgDesc, NULL, &ret);
+    if (ret || !imgBuf) {
+        log_error("Could not create OpenCL image, ret %d", ret);
         exit(1);
     }
 
@@ -95,9 +102,9 @@ int main()
     }
 
     /* Set OpenCL Kernel Parameters */
-    ret = clSetKernelArg(kernel, 0, sizeof(cl_mem), (void *)&memobj);
+    ret = clSetKernelArg(kernel, 0, sizeof(cl_mem), (void *)&imgBuf);
     if (ret) {
-        log_error("Could not set kernel argument\n");
+        log_error("Could not set kernel argument, ret %d", ret);
         exit(1);
     }
 
@@ -108,25 +115,17 @@ int main()
         exit(1);
     }
 
+    const size_t origin[3] = { 0, 0, 0 };
+    const size_t region[3] = { 640, 480, 1 };
+    size_t rowPitch;
+
     /* Do a blocking read to copy results from the memory buffer */
-    ret = clEnqueueReadBuffer(command_queue, memobj, CL_TRUE, 0,
-            MEM_SIZE * sizeof(char), string, 0, NULL, NULL);
+    unsigned char *buf = clEnqueueMapImage(command_queue, imgBuf, CL_TRUE, CL_MAP_READ,
+            origin, region, &rowPitch, NULL, 0, NULL, NULL, &ret);
     if (ret) {
-        log_error("Could not enqueue buffer read");
+        log_error("Could not enqueue image mapping, ret %d", ret);
         exit(1);
     }
-
-    /* Display Result */
-    puts(string);
-
-    /* Finalization */
-    ret = clFlush(command_queue);
-    ret = clFinish(command_queue);
-    ret = clReleaseKernel(kernel);
-    ret = clReleaseProgram(program);
-    ret = clReleaseMemObject(memobj);
-    ret = clReleaseCommandQueue(command_queue);
-    ret = clReleaseContext(context);
 
     /* Mess around with glfw */
     GLFWwindow* window;
@@ -147,17 +146,6 @@ int main()
         return -1;
     }
 
-    unsigned char *buf = malloc(640 * 480 * 3);
-
-    for (int i = 0; i < 640; i++) {
-        for (int j = 0; j < 480; j++) {
-            int base = ((i * 480) + j) * 3;
-            buf[base] = 255 * ((float) i/640.0);
-            buf[base + 1] = 0; // * ((float) j/480.0);
-            buf[base + 2] = 0;
-        }
-    }
-
     glfwSetKeyCallback(window, key_callback);
     glfwSetWindowSizeCallback(window, window_size_callback);
 
@@ -169,7 +157,9 @@ int main()
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
     {
-        glDrawPixels(640, 480, GL_RGB, GL_UNSIGNED_BYTE, buf);
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        glDrawPixels(640, 480, GL_RGBA, GL_UNSIGNED_BYTE, buf);
 
         /* Swap front and back buffers */
         glfwSwapBuffers(window);
@@ -181,6 +171,15 @@ int main()
     glfwDestroyWindow(window);
 
     glfwTerminate();
+
+    /* Finalization */
+    ret = clFlush(command_queue);
+    ret = clFinish(command_queue);
+    ret = clReleaseKernel(kernel);
+    ret = clReleaseProgram(program);
+    ret = clReleaseMemObject(imgBuf);
+    ret = clReleaseCommandQueue(command_queue);
+    ret = clReleaseContext(context);
 
     return 0;
 }
