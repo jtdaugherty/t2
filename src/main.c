@@ -1,4 +1,6 @@
 
+#include <GLFW/glfw3.h>
+
 #include <t2/logging.h>
 #include <t2/info.h>
 #include <t2/platform.h>
