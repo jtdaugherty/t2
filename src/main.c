@@ -126,8 +126,9 @@ int main()
     if (!glfwInit())
         return -1;
 
-    /* Windows created after this hint will have a fixed size */
+    /* Set window hints */
     glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
+    glfwWindowHint(GLFW_SRGB_CAPABLE, GL_TRUE);
 
     /* Create a windowed mode window and its OpenGL context */
     window = glfwCreateWindow(640, 480, "t2", NULL, NULL);
