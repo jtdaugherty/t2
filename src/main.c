@@ -22,6 +22,11 @@ static void key_callback(GLFWwindow* window, int key, int scancode,
         glfwSetWindowShouldClose(window, GL_TRUE);
 }
 
+static void window_size_callback(GLFWwindow* window, int width, int height)
+{
+    glViewport(0, 0, width, height);
+}
+
 int main()
 {
     cl_context context = NULL;
@@ -139,20 +144,17 @@ int main()
     }
 
     glfwSetKeyCallback(window, key_callback);
+    glfwSetWindowSizeCallback(window, window_size_callback);
 
     /* Make the window's context current */
     glfwMakeContextCurrent(window);
 
     glfwSwapInterval(1);
 
-    int width, height;
-
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
     {
         /* Render here */
-        glfwGetFramebufferSize(window, &width, &height);
-        glViewport(0, 0, width, height);
         glClear(GL_COLOR_BUFFER_BIT);
 
         /* Swap front and back buffers */
