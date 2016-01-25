@@ -25,6 +25,10 @@ static void key_callback(GLFWwindow* window, int key, int scancode,
 static void window_size_callback(GLFWwindow* window, int width, int height)
 {
     glViewport(0, 0, width, height);
+    glLoadIdentity();
+    glOrtho(0, width, 0, height, -1, 1);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
 }
 
 int main()
@@ -143,6 +147,17 @@ int main()
         return -1;
     }
 
+    unsigned char *buf = malloc(640 * 480 * 3);
+
+    for (int i = 0; i < 640; i++) {
+        for (int j = 0; j < 480; j++) {
+            int base = ((i * 480) + j) * 3;
+            buf[base] = 255 * ((float) i/640.0);
+            buf[base + 1] = 0; // * ((float) j/480.0);
+            buf[base + 2] = 0;
+        }
+    }
+
     glfwSetKeyCallback(window, key_callback);
     glfwSetWindowSizeCallback(window, window_size_callback);
 
@@ -154,8 +169,7 @@ int main()
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
     {
-        /* Render here */
-        glClear(GL_COLOR_BUFFER_BIT);
+        glDrawPixels(640, 480, GL_RGB, GL_UNSIGNED_BYTE, buf);
 
         /* Swap front and back buffers */
         glfwSwapBuffers(window);
