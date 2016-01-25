@@ -13,13 +13,13 @@ int global_log_level = LOG_DEBUG;
 int main()
 {
     cl_context context = NULL;
-    cl_device_id device_id;
-    cl_platform_id platform_id;
+    cl_device_id device_id = NULL;
+    cl_platform_id platform_id = NULL;
     cl_command_queue command_queue = NULL;
     cl_program program = NULL;
     cl_kernel kernel = NULL;
     cl_mem memobj = NULL;
-    cl_int ret;
+    cl_int ret = -1;
     char string[MEM_SIZE];
 
     /* Choose an OpenCL platform */
