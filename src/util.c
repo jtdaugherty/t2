@@ -6,6 +6,7 @@
 #include <t2/logging.h>
 
 #define MAX_SOURCE_SIZE 0x20000
+#define MAX_LOG_SIZE    0x10000
 
 cl_program readAndBuildProgram(cl_context context, cl_device_id device_id, const char *path, int *res) {
     int ret;
@@ -53,6 +54,18 @@ cl_program readAndBuildProgram(cl_context context, cl_device_id device_id, const
     ret = clBuildProgram(program, 1, &device_id, NULL, NULL, NULL);
     if (ret) {
         log_error("Error building %s", path);
+
+        char build_log[MAX_LOG_SIZE];
+        size_t actual_size;
+
+        ret = clGetProgramBuildInfo(program, device_id, CL_PROGRAM_BUILD_LOG, MAX_LOG_SIZE, build_log, &actual_size);
+        if (ret) {
+            log_error("Error getting build information, ret %d", ret);
+            return NULL;
+        } else {
+            log_error("Build log: %s", build_log);
+        }
+
         return NULL;
     } else {
         return program;
