@@ -12,6 +12,16 @@
 
 int global_log_level = LOG_DEBUG;
 
+static void key_callback(GLFWwindow* window, int key, int scancode,
+        int action, int mods)
+{
+#define PRESS(KEY) (key == KEY && action == GLFW_PRESS)
+#define QUIT_KEY (PRESS(GLFW_KEY_ESCAPE) || PRESS(GLFW_KEY_Q))
+
+    if (QUIT_KEY)
+        glfwSetWindowShouldClose(window, GL_TRUE);
+}
+
 int main()
 {
     cl_context context = NULL;
@@ -108,6 +118,49 @@ int main()
     ret = clReleaseMemObject(memobj);
     ret = clReleaseCommandQueue(command_queue);
     ret = clReleaseContext(context);
+
+    /* Mess around with glfw */
+    GLFWwindow* window;
+
+    /* Initialize the library */
+    if (!glfwInit())
+        return -1;
+
+    /* Create a windowed mode window and its OpenGL context */
+    window = glfwCreateWindow(640, 480, "Hello World", NULL, NULL);
+    if (!window)
+    {
+        glfwTerminate();
+        return -1;
+    }
+
+    glfwSetKeyCallback(window, key_callback);
+
+    /* Make the window's context current */
+    glfwMakeContextCurrent(window);
+
+    glfwSwapInterval(1);
+
+    int width, height;
+
+    /* Loop until the user closes the window */
+    while (!glfwWindowShouldClose(window))
+    {
+        /* Render here */
+        glfwGetFramebufferSize(window, &width, &height);
+        glViewport(0, 0, width, height);
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        /* Swap front and back buffers */
+        glfwSwapBuffers(window);
+
+        /* Poll for and process events */
+        glfwPollEvents();
+    }
+
+    glfwDestroyWindow(window);
+
+    glfwTerminate();
 
     return 0;
 }
