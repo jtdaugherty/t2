@@ -2,7 +2,6 @@
 #include <GL/glew.h>
 
 #include <OpenGL/gl.h>
-#include <OpenGL/CGLCurrent.h>
 #include <GLFW/glfw3.h>
 
 #include <sys/stat.h>
@@ -31,10 +30,6 @@ static void key_callback(GLFWwindow* window, int key, int scancode,
 
     if (QUIT_KEY)
         glfwSetWindowShouldClose(window, GL_TRUE);
-}
-
-void clNotify(const char *errinfo, const void *private_info, size_t cb, void *user_data) {
-    log_error("%s", errinfo);
 }
 
 int main()
@@ -96,52 +91,18 @@ int main()
         logPlatformInfo(platform_id);
     }
 
-    CGLContextObj cglContext = CGLGetCurrentContext();
-    if (!cglContext) {
-        log_error("Could not get CGLContext");
+    cl_context context = createOpenCLContext();
+    if (!context) {
+        log_error("Could not create OpenCL context");
         exit(1);
     }
 
-    CGLShareGroupObj cglShareGroup = CGLGetShareGroup(cglContext);
-    if (!cglShareGroup) {
-        log_error("Could not get share group");
+    cl_device_id device_id = chooseOpenCLDevice(platform_id, context);
+    if (!device_id) {
+        log_error("Could not get suitable OpenCL device");
         exit(1);
     }
 
-    cl_context_properties clProperties[] = {
-        CL_CONTEXT_PROPERTY_USE_CGL_SHAREGROUP_APPLE,
-        (cl_context_properties)cglShareGroup, 0
-    };
-
-    /* Create OpenCL context using share group so we can do efficient
-    rendering from OpenCL kernel */
-    cl_context context = clCreateContext(clProperties, 0, NULL, clNotify, NULL, &ret);
-    if (ret) {
-        log_error("Could not create context, ret %d", ret);
-        exit(1);
-    }
-
-    log_debug("Created OpenCL context");
-
-    /* Get device ID from context */
-    size_t returned;
-    cl_device_id device_ids[10];
-    ret = clGetContextInfo(context, CL_CONTEXT_DEVICES, sizeof(device_ids), device_ids, &returned);
-    if (ret) {
-        log_error("Could not get devices from context, ret %d", ret);
-        exit(1);
-    }
-
-    int num_devices = returned / sizeof(cl_device_id);
-    log_info("Devices found in context: %d", num_devices);
-
-    if (num_devices < 1) {
-        log_error("No suitable devices available in context, exiting");
-        exit(1);
-    }
-
-    /* Create Command Queue */
-    cl_device_id device_id = device_ids[0];
     logDeviceInfo(device_id);
 
     command_queue = clCreateCommandQueue(context, device_id, 0, &ret);
