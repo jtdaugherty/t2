@@ -10,7 +10,20 @@ cl_int logDeviceInfo(cl_device_id device_id) {
         return ret;
     }
 
-    log_info("Device extensions: %s", extension_list);
+    char vendorName[1024] = {0};
+    char deviceName[1024] = {0};
+
+    ret = clGetDeviceInfo(device_id, CL_DEVICE_VENDOR, sizeof(vendorName), vendorName, NULL);
+    ret |= clGetDeviceInfo(device_id, CL_DEVICE_NAME, sizeof(deviceName), deviceName, NULL);
+    if (ret) {
+        log_error("Failed to get device info, ret %d", ret);
+        return ret;
+    }
+
+    log_info("Device details:");
+    log_info("  Name: %s", deviceName);
+    log_info("  Vendor: %s", vendorName);
+    log_info("  Extensions: %s", extension_list);
     return 0;
 }
 

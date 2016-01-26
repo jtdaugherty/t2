@@ -1,6 +1,14 @@
 CC = gcc
-CFLAGS = -Wall -Iinclude $(shell pkg-config --cflags glfw3)
-LIBS = -framework opencl $(shell pkg-config --static --libs glfw3)
+CFLAGS = \
+		 -Wall -Iinclude \
+		 $(shell pkg-config --cflags glfw3) \
+		 $(shell pkg-config --cflags glew)
+
+LIBS = \
+	   -framework opencl \
+	   $(shell pkg-config --static --libs glfw3) \
+	   $(shell pkg-config --static --libs glew)
+
 PROGNAME = t2
 
 OBJS = \
