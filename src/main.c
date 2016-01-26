@@ -39,32 +39,27 @@ int main()
     cl_program program = NULL;
     cl_kernel kernel = NULL;
     cl_int ret = -1;
+    int width, height;
+    resources res;
 
     /* Initialize the library */
     if (!glfwInit())
         return -1;
 
-    log_debug("GLFW initialized");
-
     /* Set window hints */
     glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
     glfwWindowHint(GLFW_SRGB_CAPABLE, GL_TRUE);
-
-    log_debug("Set GLFW window hints");
 
     /* Create a windowed mode window and its OpenGL context */
     GLFWwindow* window = glfwCreateWindow(640, 480, "t2", NULL, NULL);
     if (!window)
     {
+        log_error("Could not create GLFW window");
         glfwTerminate();
         return -1;
     }
 
-    log_debug("GLFW window created");
-
     glfwMakeContextCurrent(window);
-
-    log_debug("Made window OpenGL context current");
 
     GLenum err = glewInit();
     if (GLEW_OK != err)
@@ -85,24 +80,10 @@ int main()
 
     /* Choose an OpenCL platform */
     platform_id = choosePlatform();
-    if (!platform_id) {
-        exit(1);
-    } else {
-        logPlatformInfo(platform_id);
-    }
-
+    logPlatformInfo(platform_id);
     cl_context context = createOpenCLContext();
-    if (!context) {
-        log_error("Could not create OpenCL context");
-        exit(1);
-    }
 
     cl_device_id device_id = chooseOpenCLDevice(platform_id, context);
-    if (!device_id) {
-        log_error("Could not get suitable OpenCL device");
-        exit(1);
-    }
-
     logDeviceInfo(device_id);
 
     command_queue = clCreateCommandQueue(context, device_id, 0, &ret);
@@ -111,16 +92,12 @@ int main()
         exit(1);
     }
 
-    log_debug("Created OpenCL command queue");
-
     /* Create Kernel Program from the source */
     program = readAndBuildProgram(context, device_id, "cl/t2.cl", &ret);
     if (!program) {
         log_error("readAndBuildProgram failed, ret %d", ret);
         exit(1);
     }
-
-    log_debug("Read OpenCL kernel program source");
 
     /* Create OpenCL Kernel */
     kernel = clCreateKernel(program, "t2main", &ret);
@@ -129,27 +106,12 @@ int main()
         exit(1);
     }
 
-    log_debug("Created kernel");
+    ret = shader_setup(&res);
 
-    /* Call window size callback at least once */
-    int width, height;
     glfwGetWindowSize(window, &width, &height);
-
     glfwSwapInterval(1);
 
-    resources res;
-
-    ret = shader_setup(&res);
-    if (ret) {
-        log_error("Error creating shader program, ret %d", ret);
-        exit(1);
-    }
-
-    log_debug("Created shader program");
-
     GLuint texture = make_texture(width, height);
-
-    log_debug("Created texture");
 
     GLint position_attribute = glGetAttribLocation(res.shader_program, "position");
     if (position_attribute == -1) {
@@ -163,24 +125,18 @@ int main()
         exit(1);
     }
 
-    log_debug("Finished setting attribute/uniform locations");
-
     cl_mem texmem = clCreateFromGLTexture(context, CL_MEM_READ_WRITE, GL_TEXTURE_2D, 0, texture, &ret);
     if (ret) {
         log_error("Could not create shared OpenCL/OpenGL texture, ret %d", ret);
         exit(1);
     }
     
-    log_debug("Created shared OpenCL/OpenGL texture");
-
-    log_debug("Entering graphics loop");
-
     float amt = 1.0;
     int dir = 0;
-
-    struct timeval start;
-    gettimeofday(&start, NULL);
     float frames = 0;
+    struct timeval start;
+
+    gettimeofday(&start, NULL);
 
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))

@@ -33,19 +33,19 @@ static GLuint make_shader(GLenum type, const char *filename)
 
     if (stat(filename, &st)) {
         log_error("Could not get file size for %s", filename);
-        return 0;
+        exit(1);
     }
 
     if (st.st_size > 0x100000) {
         log_error("File size %lld exceeds allowed size %d for file %s", st.st_size, 0x100000, filename);
-        return 0;
+        exit(1);
     }
 
     /* Load the source code containing the kernel*/
     fp = fopen(filename, "r");
     if (!fp) {
         log_error("Failed to open shader file %s.", filename);
-        return 0;
+        exit(1);
     }
 
     source = (char*)malloc(st.st_size);
@@ -53,7 +53,7 @@ static GLuint make_shader(GLenum type, const char *filename)
     fclose(fp);
 
     if (!source)
-        return 0;
+        exit(1);
 
     shader = glCreateShader(type);
     glShaderSource(shader, 1, (const GLchar**)&source, &length);
@@ -65,7 +65,7 @@ static GLuint make_shader(GLenum type, const char *filename)
         log_error("Failed to compile %s:", filename);
         show_info_log(shader, glGetShaderiv, glGetShaderInfoLog);
         glDeleteShader(shader);
-        return 0;
+        exit(1);
     }
 
     return shader;
