@@ -31,28 +31,6 @@ static void key_callback(GLFWwindow* window, int key, int scancode,
         glfwSetWindowShouldClose(window, GL_TRUE);
 }
 
-static void window_size_callback(GLFWwindow* window, int width, int height)
-{
-    // int fbW, fbH;
-    // glfwGetFramebufferSize(window, &fbW, &fbH);
-
-    // width_zoom = fbW / ((float) width);
-    // height_zoom = fbH / ((float) height);
-
-    // log_info("Window size: %dx%d", width, height);
-    // log_info("Framebuffer size: %dx%d", fbW, fbH);
-    // log_info("Pixel zoom factors: %f, %f", width_zoom, height_zoom);
-
-    // glViewport(0, 0, fbW, fbH);
-
-    // glMatrixMode(GL_PROJECTION);
-    // glLoadIdentity();
-    // glOrtho(0, fbW, 0, fbH, -1, 1);
-
-    // glMatrixMode(GL_MODELVIEW);
-    // glLoadIdentity();
-}
-
 static GLuint make_buffer(GLenum target, const void *buffer_data, GLsizei buffer_size)
 {
     GLuint buffer;
@@ -215,7 +193,6 @@ int main()
     log_info("Using GLEW %s", glewGetString(GLEW_VERSION));
     
     glfwSetKeyCallback(window, key_callback);
-    glfwSetWindowSizeCallback(window, window_size_callback);
 
     /* Make the window's context current */
     glfwMakeContextCurrent(window);
@@ -307,7 +284,6 @@ int main()
     /* Call window size callback at least once */
     int width, height;
     glfwGetWindowSize(window, &width, &height);
-    window_size_callback(window, width, height);
 
     glfwSwapInterval(1);
 
