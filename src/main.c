@@ -78,12 +78,16 @@ int main()
         exit(1);
     }
 
+    log_debug("Created OpenCL context");
+
     /* Create Command Queue */
     command_queue = clCreateCommandQueue(context, device_id, 0, &ret);
     if (ret) {
         log_error("Could not create command queue\n");
         exit(1);
     }
+
+    log_debug("Created OpenCL command queue");
 
     /* Create an OpenCL image */
     cl_image_format bufFmt = {
@@ -103,12 +107,16 @@ int main()
         exit(1);
     }
 
+    log_debug("Created image");
+
     /* Create Kernel Program from the source */
     program = readAndBuildProgram(context, device_id, "cl/t2.cl", &ret);
     if (!program) {
         log_error("readAndBuildProgram failed, ret %d", ret);
         exit(1);
     }
+
+    log_debug("Read program");
 
     /* Create OpenCL Kernel */
     kernel = clCreateKernel(program, "t2main", &ret);
@@ -117,6 +125,8 @@ int main()
         exit(1);
     }
 
+    log_debug("Created kernel");
+
     /* Set OpenCL Kernel Parameters */
     ret = clSetKernelArg(kernel, 0, sizeof(cl_mem), (void *)&imgBuf);
     if (ret) {
@@ -124,12 +134,16 @@ int main()
         exit(1);
     }
 
+    log_debug("Set kernel argument");
+
     /* Execute OpenCL Kernel */
     ret = clEnqueueTask(command_queue, kernel, 0, NULL, NULL);
     if (ret) {
         log_error("Could not enqueue task\n");
         exit(1);
     }
+
+    log_debug("Enqueued task");
 
     const size_t origin[3] = { 0, 0, 0 };
     const size_t region[3] = { 640, 480, 1 };
@@ -143,24 +157,29 @@ int main()
         exit(1);
     }
 
-    /* Mess around with glfw */
-    GLFWwindow* window;
+    log_debug("Enqueued image mapping");
 
     /* Initialize the library */
     if (!glfwInit())
         return -1;
 
+    log_debug("GLFW initialized");
+
     /* Set window hints */
     glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
     glfwWindowHint(GLFW_SRGB_CAPABLE, GL_TRUE);
 
+    log_debug("Set GLFW window hints");
+
     /* Create a windowed mode window and its OpenGL context */
-    window = glfwCreateWindow(640, 480, "t2", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(640, 480, "t2", NULL, NULL);
     if (!window)
     {
         glfwTerminate();
         return -1;
     }
+
+    log_debug("GLFW window created");
 
     glfwSetKeyCallback(window, key_callback);
     glfwSetWindowSizeCallback(window, window_size_callback);
