@@ -10,6 +10,9 @@
  
 int global_log_level = LOG_DEBUG;
 
+float width_zoom = 1.0;
+float height_zoom = 1.0;
+
 static void key_callback(GLFWwindow* window, int key, int scancode,
         int action, int mods)
 {
@@ -22,9 +25,22 @@ static void key_callback(GLFWwindow* window, int key, int scancode,
 
 static void window_size_callback(GLFWwindow* window, int width, int height)
 {
-    glViewport(0, 0, width, height);
+    int fbW, fbH;
+    glfwGetFramebufferSize(window, &fbW, &fbH);
+
+    width_zoom = fbW / ((float) width);
+    height_zoom = fbH / ((float) height);
+
+    log_info("Window size: %dx%d", width, height);
+    log_info("Framebuffer size: %dx%d", fbW, fbH);
+    log_info("Pixel zoom factors: %f, %f", width_zoom, height_zoom);
+
+    glViewport(0, 0, fbW, fbH);
+
+    glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glOrtho(0, width, 0, height, -1, 1);
+    glOrtho(0, fbW, 0, fbH, -1, 1);
+
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 }
@@ -149,6 +165,11 @@ int main()
     glfwSetKeyCallback(window, key_callback);
     glfwSetWindowSizeCallback(window, window_size_callback);
 
+    /* Call window size callback at least once */
+    int width, height;
+    glfwGetWindowSize(window, &width, &height);
+    window_size_callback(window, width, height);
+
     /* Make the window's context current */
     glfwMakeContextCurrent(window);
 
@@ -157,6 +178,8 @@ int main()
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
     {
+        glPixelZoom(width_zoom, height_zoom);
+
         glClear(GL_COLOR_BUFFER_BIT);
 
         glDrawPixels(640, 480, GL_RGBA, GL_UNSIGNED_BYTE, buf);
