@@ -386,7 +386,7 @@ int main()
         }
 
         /* Execute OpenCL Kernel */
-        size_t global_work_size[2] = { 640, 480 };
+        size_t global_work_size[2] = { width, height };
         ret = clEnqueueNDRangeKernel(command_queue, kernel, 2, NULL, global_work_size, NULL, 0, NULL, NULL);
         if (ret) {
             log_error("Could not enqueue task\n");
@@ -401,13 +401,13 @@ int main()
         }
 
         if (dir == 0) {
-            amt -= 0.05;
+            amt -= 0.01;
             if (amt < 0) {
                 amt = 0;
                 dir = 1;
             }
         } else {
-            amt += 0.05;
+            amt += 0.01;
             if (amt > 1) {
                 amt = 1;
                 dir = 0;
