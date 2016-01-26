@@ -466,10 +466,6 @@ int main()
         }
     }
 
-    glfwDestroyWindow(window);
-
-    glfwTerminate();
-
     /* Finalization */
     ret = clFlush(command_queue);
     ret = clFinish(command_queue);
@@ -477,6 +473,10 @@ int main()
     ret = clReleaseProgram(program);
     ret = clReleaseCommandQueue(command_queue);
     ret = clReleaseContext(context);
+
+    glfwDestroyWindow(window);
+
+    glfwTerminate();
 
     return 0;
 }
