@@ -6,6 +6,7 @@
 #include <GLFW/glfw3.h>
 
 #include <sys/stat.h>
+#include <sys/time.h>
 #include <string.h>
 
 #include <t2/logging.h>
@@ -377,46 +378,66 @@ int main()
     
     log_debug("Created shared OpenCL/OpenGL texture");
 
-    /* Set OpenCL Kernel Parameters */
-    ret = clSetKernelArg(kernel, 0, sizeof(cl_mem), (void *)&texmem);
-    if (ret) {
-        log_error("Could not set kernel argument, ret %d", ret);
-        exit(1);
-    }
-
-    log_debug("Set kernel argument");
-
-    ret = clEnqueueAcquireGLObjects(command_queue, 1, &texmem, 0, NULL, NULL);
-    if (ret) {
-        log_error("Could not enqueue GL object acquisition, ret %d", ret);
-        exit(1);
-    }
-
-    log_debug("Enqueued GL object acquisition");
-
-    /* Execute OpenCL Kernel */
-    ret = clEnqueueTask(command_queue, kernel, 0, NULL, NULL);
-    if (ret) {
-        log_error("Could not enqueue task\n");
-        exit(1);
-    }
-
-    log_debug("Enqueued task");
-
-    // Before returning the objects to OpenGL, we sync to make sure OpenCL is done.
-    ret = clEnqueueReleaseGLObjects(command_queue, 1, &texmem, 0, NULL, NULL);
-    if (ret) {
-        log_error("Could not enqueue GL object acquisition, ret %d", ret);
-        exit(1);
-    }
-
-    log_debug("Enqueued GL object release");
-
     log_debug("Entering graphics loop");
+
+    float amt = 1.0;
+    int dir = 0;
+
+    struct timeval start;
+    gettimeofday(&start, NULL);
+    float frames = 0;
 
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
     {
+        /* Set OpenCL Kernel Parameters */
+        ret = clSetKernelArg(kernel, 0, sizeof(cl_mem), (void *)&texmem);
+        if (ret) {
+            log_error("Could not set kernel argument, ret %d", ret);
+            exit(1);
+        }
+
+        ret = clSetKernelArg(kernel, 1, sizeof(float), (void *)&amt);
+        if (ret) {
+            log_error("Could not set kernel argument, ret %d", ret);
+            exit(1);
+        }
+
+        ret = clEnqueueAcquireGLObjects(command_queue, 1, &texmem, 0, NULL, NULL);
+        if (ret) {
+            log_error("Could not enqueue GL object acquisition, ret %d", ret);
+            exit(1);
+        }
+
+        /* Execute OpenCL Kernel */
+        size_t global_work_size[2] = { 640, 480 };
+        ret = clEnqueueNDRangeKernel(command_queue, kernel, 2, NULL, global_work_size, NULL, 0, NULL, NULL);
+        if (ret) {
+            log_error("Could not enqueue task\n");
+            exit(1);
+        }
+
+        // Before returning the objects to OpenGL, we sync to make sure OpenCL is done.
+        ret = clEnqueueReleaseGLObjects(command_queue, 1, &texmem, 0, NULL, NULL);
+        if (ret) {
+            log_error("Could not enqueue GL object acquisition, ret %d", ret);
+            exit(1);
+        }
+
+        if (dir == 0) {
+            amt -= 0.05;
+            if (amt < 0) {
+                amt = 0;
+                dir = 1;
+            }
+        } else {
+            amt += 0.05;
+            if (amt > 1) {
+                amt = 1;
+                dir = 0;
+            }
+        }
+
         glPixelZoom(width_zoom, height_zoom);
 
         glClear(GL_COLOR_BUFFER_BIT);
@@ -453,6 +474,20 @@ int main()
 
         /* Poll for and process events */
         glfwPollEvents();
+
+        if (frames >= 200.0) {
+            struct timeval now;
+            gettimeofday(&now, NULL);
+
+            // Measure difference, compute average frame rate
+            float fps = (float) frames / (float) (now.tv_sec - start.tv_sec);
+            log_info("FPS: %f", fps);
+
+            start = now;
+            frames = 0.0;
+        } else {
+            frames += 1.0;
+        }
     }
 
     glfwDestroyWindow(window);
