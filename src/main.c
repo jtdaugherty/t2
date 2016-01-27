@@ -18,15 +18,24 @@
 #include <t2/texture.h>
  
 int global_log_level = LOG_DEBUG;
+float zVal = -5;
 
 static void key_callback(GLFWwindow* window, int key, int scancode,
         int action, int mods)
 {
-#define PRESS(KEY) (key == KEY && action == GLFW_PRESS)
+#define PRESS(KEY) (key == KEY && (action == GLFW_PRESS || action == GLFW_REPEAT))
 #define QUIT_KEY (PRESS(GLFW_KEY_ESCAPE) || PRESS(GLFW_KEY_Q))
+#define W_KEY (PRESS(GLFW_KEY_W))
+#define S_KEY (PRESS(GLFW_KEY_S))
 
     if (QUIT_KEY)
         glfwSetWindowShouldClose(window, GL_TRUE);
+
+    if (W_KEY)
+        zVal += 0.05;
+
+    if (S_KEY)
+        zVal -= 0.05;
 }
 
 int main()
@@ -97,7 +106,7 @@ int main()
     }
 
     /* Create OpenCL Kernel */
-    kernel = clCreateKernel(program, "t2main", &ret);
+    kernel = clCreateKernel(program, "raytracer", &ret);
     if (ret) {
         log_error("Could not create kernel!\n");
         exit(1);
@@ -115,8 +124,6 @@ int main()
         exit(1);
     }
     
-    float amt = 1.0;
-    int dir = 0;
     float frames = 0;
     struct timeval start;
 
@@ -132,7 +139,19 @@ int main()
             exit(1);
         }
 
-        ret = clSetKernelArg(kernel, 1, sizeof(float), (void *)&amt);
+        ret = clSetKernelArg(kernel, 1, sizeof(width), (void *)&width);
+        if (ret) {
+            log_error("Could not set kernel argument, ret %d", ret);
+            exit(1);
+        }
+
+        ret = clSetKernelArg(kernel, 2, sizeof(height), (void *)&height);
+        if (ret) {
+            log_error("Could not set kernel argument, ret %d", ret);
+            exit(1);
+        }
+
+        ret = clSetKernelArg(kernel, 3, sizeof(zVal), (void *)&zVal);
         if (ret) {
             log_error("Could not set kernel argument, ret %d", ret);
             exit(1);
@@ -157,20 +176,6 @@ int main()
         if (ret) {
             log_error("Could not enqueue GL object acquisition, ret %d", ret);
             exit(1);
-        }
-
-        if (dir == 0) {
-            amt -= 0.01;
-            if (amt < 0) {
-                amt = 0;
-                dir = 1;
-            }
-        } else {
-            amt += 0.01;
-            if (amt > 1) {
-                amt = 1;
-                dir = 0;
-            }
         }
 
         glClear(GL_COLOR_BUFFER_BIT);
