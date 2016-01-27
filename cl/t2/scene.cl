@@ -4,7 +4,7 @@
 static void buildscene(struct Scene *s)
 {
     s->spheres[s->numSpheres].center = (float4)(0, 1, 0, 0);
-    s->spheres[s->numSpheres].sqradius = 1; // 2.5f * 2.5f;
+    s->spheres[s->numSpheres].radius = 1;
     s->spheres[s->numSpheres].material = 0;
     s->numSpheres = 1;
 

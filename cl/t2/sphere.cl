@@ -10,7 +10,7 @@ static int sphereintersect(struct Sphere *s, struct Ray *r, float *dist)
 {
     float4 v = r->origin - s->center;
     float b = -dot(v, r->dir);
-    float det = (b * b) - dot(v, v) + s->sqradius;
+    float det = (b * b) - dot(v, v) + (s->radius * s->radius);
 
     if(det > 0)
     {

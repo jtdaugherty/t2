@@ -17,7 +17,7 @@ struct Sphere
 {
     uint  material;
     float4 center;
-    float sqradius;
+    float radius;
 };
 
 struct Plane
