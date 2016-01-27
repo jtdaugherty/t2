@@ -8,29 +8,31 @@ static float4 spherenormal(struct Sphere *s, float4 poi)
 
 static int sphereintersect(struct Sphere *s, struct Ray *r, float *dist)
 {
-    float4 v = r->origin - s->center;
-    float b = -dot(v, r->dir);
-    float det = (b * b) - dot(v, v) + (s->radius * s->radius);
+    float4 temp = r->origin - s->center;
+    float a = dot(r->dir, r->dir);
+    float b = dot((float4)(2.0) * temp, r->dir);
+    float c = dot(temp, temp) - (s->radius * s->radius);
+    float disc = b * b - (4.0 * a * c);
 
-    if(det > 0)
-    {
-        det = sqrt(det);
-        float i1 = b - det;
-        float i2 = b + det;
+    if (disc < 0) {
+        return 0;
+    } else {
+        float e = sqrt(disc);
+        float denom = 2.0 * a;
+        float t = (-b - e) / denom;
 
-        if(i2 > 0)
-        {
-            if(i1 < 0)
-            {
-                if(i2 < *dist) { *dist = i2; return -1; }
-            }
-            else
-            {
-                if(i1 < *dist) { *dist = i1; return 1; }
-            }
+        if (t > EPSILON) {
+            *dist = t;
+            return 1;
+        }
+
+        t = (-b + e) / denom;
+
+        if (t > EPSILON) {
+            *dist = t;
+            return 1;
         }
     }
 
     return 0;
 }
-
