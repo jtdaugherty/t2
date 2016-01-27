@@ -39,8 +39,9 @@ struct Plane
 
 struct Light
 {
-    uint  material;
     float3 center;
+    float strength;
+    float4 color;
 };
 
 struct Material

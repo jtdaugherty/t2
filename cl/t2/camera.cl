@@ -17,8 +17,8 @@ static float3 camera_ray_direction(struct Camera *camera, float2 point)
 
 static float4 camera_render(struct Camera *camera, struct Scene *scene, int width, int height, int2 coord)
 {
-    float2 pp = (float2)(coord.x - (0.5 * (float)width),
-                         coord.y - (0.5 * (float)height));
+    float2 pp = (float2)(coord.x - (width / 2.f),
+                         coord.y - (height / 2.f));
     struct Ray r;
 
     r.origin = camera->eye;

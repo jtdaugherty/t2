@@ -19,23 +19,34 @@
  
 int global_log_level = LOG_DEBUG;
 float zVal = -5;
+float xVal = 0;
 
 static void key_callback(GLFWwindow* window, int key, int scancode,
         int action, int mods)
 {
 #define PRESS(KEY) (key == KEY && (action == GLFW_PRESS || action == GLFW_REPEAT))
 #define QUIT_KEY (PRESS(GLFW_KEY_ESCAPE) || PRESS(GLFW_KEY_Q))
+#define A_KEY (PRESS(GLFW_KEY_A))
+#define D_KEY (PRESS(GLFW_KEY_D))
 #define W_KEY (PRESS(GLFW_KEY_W))
 #define S_KEY (PRESS(GLFW_KEY_S))
 
     if (QUIT_KEY)
         glfwSetWindowShouldClose(window, GL_TRUE);
 
+    float vel = 0.5;
+
+    if (D_KEY)
+        xVal += vel;
+
+    if (A_KEY)
+        xVal -= vel;
+
     if (W_KEY)
-        zVal += 0.05;
+        zVal -= vel;
 
     if (S_KEY)
-        zVal -= 0.05;
+        zVal += vel;
 }
 
 int main()
@@ -152,6 +163,12 @@ int main()
         }
 
         ret = clSetKernelArg(kernel, 3, sizeof(zVal), (void *)&zVal);
+        if (ret) {
+            log_error("Could not set kernel argument, ret %d", ret);
+            exit(1);
+        }
+
+        ret = clSetKernelArg(kernel, 4, sizeof(xVal), (void *)&xVal);
         if (ret) {
             log_error("Could not set kernel argument, ret %d", ret);
             exit(1);

@@ -82,7 +82,8 @@ static float4 raytrace(struct Scene *s, struct RayStack *stack, struct Ray *r, f
 
     for(uint i = 0; i < s->numLights; i++)
     {
-        struct Material *lm = &s->materials[s->lights[i].material];
+        float lStrength = s->lights[i].strength;
+        float4 lColor = s->lights[i].color;
         float3 L = s->lights[i].center - P;
 
         float shade = shadowray(s, L, P);
@@ -92,8 +93,8 @@ static float4 raytrace(struct Scene *s, struct RayStack *stack, struct Ray *r, f
         float angle = fmax(0.f, dot(N, L)) * shade;
         float s = dot(r->dir, reflect(N, L)) * shade;
 
-        color += angle * m->diff * m->amb * lm->amb 
-            + powr(fmax(0.f, s), m->spec) * lm->amb;
+        color += angle * m->diff * m->amb * float4(lStrength) * lColor
+            + powr(fmax(0.f, s), m->spec) * float4(lStrength) * lColor;
     }
 
     if(m->refl > 0)

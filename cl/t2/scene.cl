@@ -3,10 +3,15 @@
 
 static void buildscene(struct Scene *s)
 {
-    s->spheres[s->numSpheres].center = (float3)(0, 1, 0);
+    s->spheres[s->numSpheres].center = (float3)(1, 1, 0);
     s->spheres[s->numSpheres].radius = 1;
     s->spheres[s->numSpheres].material = 0;
     s->numSpheres = 1;
+
+    s->spheres[s->numSpheres].center = (float3)(-1, 1, 0);
+    s->spheres[s->numSpheres].radius = 1;
+    s->spheres[s->numSpheres].material = 1;
+    s->numSpheres = 2;
 
     s->planes[s->numPlanes].normal = (float3)(0, 1, 0);
     s->planes[s->numPlanes].origin = (float3)(0, 0, 0);
@@ -27,6 +32,11 @@ static void buildscene(struct Scene *s)
     s->numMaterials = 2;
 
     s->lights[0].center = (float3)(4, 5, 0);
-    s->lights[0].material = 0;
-    s->numLights = 1;
+    s->lights[0].strength = 0.8;
+    s->lights[0].color = (float4)(1, 0, 0, 1);
+
+    s->lights[1].center = (float3)(-4, 2, 0);
+    s->lights[1].strength = 0.9;
+    s->lights[1].color = (float4)(0.7, 0.7, 1, 1);
+    s->numLights = 2;
 }
