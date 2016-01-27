@@ -67,17 +67,23 @@ static void buildscene(struct Scene *s)
 
     s->planes[s->numPlanes].normal = (float4)(0, 1, 0, 0);
     s->planes[s->numPlanes].origin = (float4)(0, 0, 0, 0);
-    s->planes[s->numPlanes].material = 0;
+    s->planes[s->numPlanes].material = 1;
     s->numPlanes = 1;
 
     s->materials[0].refl = 0;
     s->materials[0].refr = 0;
     s->materials[0].spec = 127;
-    s->materials[0].amb  = (float4)(0.7f, 0.7f, 0.7f, 0);
+    s->materials[0].amb  = (float4)(1, 0.7f, 0.7f, 0);
     s->materials[0].diff = 1;
-    s->numMaterials = 1;
 
-    s->lights[0].center = (float4)(0, 5, 0, 0);
+    s->materials[1].refl = 1;
+    s->materials[1].refr = 0;
+    s->materials[1].spec = 127;
+    s->materials[1].amb  = (float4)(0, 0.7f, 0.7f, 0);
+    s->materials[1].diff = 1;
+    s->numMaterials = 2;
+
+    s->lights[0].center = (float4)(4, 5, 0, 0);
     s->lights[0].material = 0;
     s->numLights = 1;
 }
