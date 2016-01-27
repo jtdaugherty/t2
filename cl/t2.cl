@@ -324,5 +324,15 @@ __kernel void raytracer(__write_only image2d_t output, uint width, uint height, 
     s.numSpheres = s.numLights = s.numMaterials = s.numPlanes = 0;
     buildscene(&s);
 
-    write_imagef(output, pos, recursivetrace(&s, &r));
+    float4 cVal = recursivetrace(&s, &r);
+
+    if (isnan(cVal.x)) {
+        write_imagef(output, pos, (float4)(1, 0, 0, 1));
+    } else if (isnan(cVal.y)) {
+        write_imagef(output, pos, (float4)(0, 1, 0, 1));
+    } else if (isnan(cVal.z)) {
+        write_imagef(output, pos, (float4)(0, 0, 1, 1));
+    } else {
+        write_imagef(output, pos, cVal);
+    }
 }
