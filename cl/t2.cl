@@ -1,6 +1,5 @@
 
-#pragma OPENCL EXTENSION cl_khr_fp64 : enable
-
+#include <t2/extensions.cl>
 #include <t2/constants.cl>
 #include <t2/types.cl>
 #include <t2/stack.cl>
