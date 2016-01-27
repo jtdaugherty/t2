@@ -1,177 +1,19 @@
-#define STACK_DEPTH 20
-#define TRACE_DEPTH 10
-
-#define MAX_PLANES 10
-#define MAX_SPHERES 10
-#define MAX_LIGHTS 10
-#define MAX_MATERIALS 10
-
-#define EPSILON 0.001f
 
 #pragma OPENCL EXTENSION cl_khr_fp64 : enable
 
-struct Ray
-{
-    float4 origin;
-    float4 dir;
-};
+#include <t2/constants.cl>
+#include <t2/types.cl>
+#include <t2/stack.cl>
+#include <t2/plane.cl>
+#include <t2/sphere.cl>
+#include <t2/scene.cl>
 
-struct Sphere
-{
-    uint  material;
-    float4 center;
-    float sqradius;
-};
-
-struct Plane
-{
-    uint material;
-    float4 normal;
-    float4 origin;
-};
-
-struct Light
-{
-    uint  material;
-    float4 center;
-};
-
-struct Material
-{
-    float refl;
-    float refr;
-    float diff;
-    float spec;
-    float4 amb;
-};
-
-struct Scene
-{
-    struct Plane planes[MAX_PLANES];
-    struct Sphere spheres[MAX_SPHERES];
-    struct Light  lights[MAX_LIGHTS];
-    struct Material materials[MAX_MATERIALS];
-
-    uint numPlanes;
-    uint numSpheres;
-    uint numLights;
-    uint numMaterials;
-};
-
-static void buildscene(struct Scene *s)
-{
-    s->spheres[s->numSpheres].center = (float4)(0, 1, 0, 0);
-    s->spheres[s->numSpheres].sqradius = 1; // 2.5f * 2.5f;
-    s->spheres[s->numSpheres].material = 0;
-    s->numSpheres = 1;
-
-    s->planes[s->numPlanes].normal = (float4)(0, 1, 0, 0);
-    s->planes[s->numPlanes].origin = (float4)(0, 0, 0, 0);
-    s->planes[s->numPlanes].material = 1;
-    s->numPlanes = 1;
-
-    s->materials[0].refl = 0;
-    s->materials[0].refr = 0;
-    s->materials[0].spec = 127;
-    s->materials[0].amb  = (float4)(1, 0.7f, 0.7f, 0);
-    s->materials[0].diff = 1;
-
-    s->materials[1].refl = 1;
-    s->materials[1].refr = 0;
-    s->materials[1].spec = 127;
-    s->materials[1].amb  = (float4)(0, 0.7f, 0.7f, 0);
-    s->materials[1].diff = 1;
-    s->numMaterials = 2;
-
-    s->lights[0].center = (float4)(4, 5, 0, 0);
-    s->lights[0].material = 0;
-    s->numLights = 1;
-}
-
-static int planeintersect(struct Plane *p, struct Ray *r, float *dist)
-{
-    float denom = dot(r->dir, p->normal);
-
-    if (denom == 0.0) {
-        return 0;
-    }
-
-    float t = dot(p->origin - r->origin, p->normal) / denom;
-
-    if (t > EPSILON) {
-        *dist = t;
-        return 1;
-    } else {
-        return 0;
-    }
-}
-
-static float4 spherenormal(struct Sphere *s, float4 poi)
-{
-    return normalize(poi - s->center);
-}
-
-static int sphereintersect(struct Sphere *s, struct Ray *r, float *dist)
-{
-    float4 v = r->origin - s->center;
-    float b = -dot(v, r->dir);
-    float det = (b * b) - dot(v, v) + s->sqradius;
-
-    if(det > 0)
-    {
-        det = sqrt(det);
-        float i1 = b - det;
-        float i2 = b + det;
-
-        if(i2 > 0)
-        {
-            if(i1 < 0)
-            {
-                if(i2 < *dist) { *dist = i2; return -1; }
-            }
-            else
-            {
-                if(i1 < *dist) { *dist = i1; return 1; }
-            }
-        }
-    }
-
-    return 0;
-}
+#define TRACE_DEPTH 10
 
 static float4 reflect(float4 A, float4 B)
 {
     return B - ((float4)2) * (float4)dot(A, B) * A;
 }
-
-struct RayStack
-{
-    struct Ray r[STACK_DEPTH];
-    int depth[STACK_DEPTH];
-    float refr[STACK_DEPTH];
-    int top;
-};
-
-static void push(struct RayStack *s, struct Ray *r, float refr, int depth)
-{
-    if(s->top < STACK_DEPTH)
-    {
-        s->r[s->top].dir = r->dir;
-        s->r[s->top].origin = r->origin;
-        s->refr[s->top] = refr;
-        s->depth[s->top] = depth;
-        s->top++;
-    }
-}
-
-struct IntersectionResult
-{
-    int result;
-    float4 normal;
-    float4 position;
-    float distance;
-    struct Material *material;
-};
 
 static int findintersection(struct Scene *s, struct Ray *r, struct IntersectionResult *intersection)
 {
