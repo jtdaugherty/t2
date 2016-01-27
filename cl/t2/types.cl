@@ -9,28 +9,38 @@
 
 struct Ray
 {
-    float4 origin;
-    float4 dir;
+    float3 origin;
+    float3 dir;
+};
+
+struct Camera
+{
+    float3 eye;
+    float3 lookat;
+    float3 up;
+    float vpdist;
+    // Computed
+    float3 u, v, w;
 };
 
 struct Sphere
 {
     uint  material;
-    float4 center;
+    float3 center;
     float radius;
 };
 
 struct Plane
 {
     uint material;
-    float4 normal;
-    float4 origin;
+    float3 normal;
+    float3 origin;
 };
 
 struct Light
 {
     uint  material;
-    float4 center;
+    float3 center;
 };
 
 struct Material
@@ -58,8 +68,8 @@ struct Scene
 struct IntersectionResult
 {
     int result;
-    float4 normal;
-    float4 position;
+    float3 normal;
+    float3 position;
     float distance;
     struct Material *material;
 };

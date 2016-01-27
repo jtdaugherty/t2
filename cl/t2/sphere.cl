@@ -1,16 +1,16 @@
 
 #include <t2/types.cl>
 
-static float4 spherenormal(struct Sphere *s, float4 poi)
+static float3 spherenormal(struct Sphere *s, float3 poi)
 {
     return normalize(poi - s->center);
 }
 
 static int sphereintersect(struct Sphere *s, struct Ray *r, float *dist)
 {
-    float4 temp = r->origin - s->center;
+    float3 temp = r->origin - s->center;
     float a = dot(r->dir, r->dir);
-    float b = dot((float4)(2.0) * temp, r->dir);
+    float b = dot((float3)(2.0) * temp, r->dir);
     float c = dot(temp, temp) - (s->radius * s->radius);
     float disc = b * b - (4.0 * a * c);
 
