@@ -137,5 +137,17 @@ GLuint shader_setup(resources *res)
         return 1;
     }
 
+    res->position_attribute = glGetAttribLocation(res->shader_program, "position");
+    if (res->position_attribute == -1) {
+        log_error("Could not get position attribute location");
+        exit(1);
+    }
+
+    res->texture_uniform = glGetUniformLocation(res->shader_program, "texture");
+    if (res->texture_uniform == -1) {
+        log_error("Could not get texture uniform location");
+        exit(1);
+    }
+
     return 0;
 }

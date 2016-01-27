@@ -8,6 +8,9 @@ typedef struct {
     GLuint shader_program;
     GLuint vertex_buffer;
     GLuint element_buffer;
+
+    GLint position_attribute;
+    GLint texture_uniform;
 } resources;
 
 GLuint shader_setup(resources *res);

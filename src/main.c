@@ -113,18 +113,6 @@ int main()
 
     GLuint texture = make_texture(width, height);
 
-    GLint position_attribute = glGetAttribLocation(res.shader_program, "position");
-    if (position_attribute == -1) {
-        log_error("Could not get position attribute location");
-        exit(1);
-    }
-
-    GLint texture_uniform = glGetUniformLocation(res.shader_program, "texture");
-    if (texture_uniform == -1) {
-        log_error("Could not get texture uniform location");
-        exit(1);
-    }
-
     cl_mem texmem = clCreateFromGLTexture(context, CL_MEM_READ_WRITE, GL_TEXTURE_2D, 0, texture, &ret);
     if (ret) {
         log_error("Could not create shared OpenCL/OpenGL texture, ret %d", ret);
@@ -197,18 +185,18 @@ int main()
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texture);
-        glUniform1i(texture_uniform, 0);
+        glUniform1i(res.texture_uniform, 0);
 
         glBindBuffer(GL_ARRAY_BUFFER, res.vertex_buffer);
         glVertexAttribPointer(
-                position_attribute,               /* attribute */
+                res.position_attribute,          /* attribute */
                 2,                                /* size */
                 GL_FLOAT,                         /* type */
                 GL_FALSE,                         /* normalized? */
                 sizeof(GLfloat)*2,                /* stride */
                 (void*)0                          /* array buffer offset */
                 );
-        glEnableVertexAttribArray(position_attribute);
+        glEnableVertexAttribArray(res.position_attribute);
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, res.element_buffer);
         glDrawElements(
@@ -218,7 +206,7 @@ int main()
                 (void*)0            /* element array buffer offset */
                 );
 
-        glDisableVertexAttribArray(position_attribute);
+        glDisableVertexAttribArray(res.position_attribute);
 
         /* Swap front and back buffers */
         glfwSwapBuffers(window);
