@@ -57,7 +57,7 @@ int main()
     glfwWindowHint(GLFW_SRGB_CAPABLE, GL_TRUE);
 
     /* Create a windowed mode window and its OpenGL context */
-    GLFWwindow* window = glfwCreateWindow(1024, 768, "t2", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(640, 480, "t2", NULL, NULL);
     if (!window)
     {
         log_error("Could not create GLFW window");
