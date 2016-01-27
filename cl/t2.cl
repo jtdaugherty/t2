@@ -78,7 +78,7 @@ static void buildscene(struct Scene *s)
     s->numMaterials = 1;
 
     s->lights[0].center = (float4)(0, 5, 0, 0);
-    s->lights[0].material = 3;
+    s->lights[0].material = 0;
     s->numLights = 1;
 }
 
