@@ -19,9 +19,6 @@
  
 int global_log_level = LOG_DEBUG;
 
-float width_zoom = 1.0;
-float height_zoom = 1.0;
-
 static void key_callback(GLFWwindow* window, int key, int scancode,
         int action, int mods)
 {
@@ -112,7 +109,6 @@ int main()
     glfwSwapInterval(1);
 
     GLuint texture = make_texture(width, height);
-
     cl_mem texmem = clCreateFromGLTexture(context, CL_MEM_READ_WRITE, GL_TEXTURE_2D, 0, texture, &ret);
     if (ret) {
         log_error("Could not create shared OpenCL/OpenGL texture, ret %d", ret);
@@ -176,8 +172,6 @@ int main()
                 dir = 0;
             }
         }
-
-        glPixelZoom(width_zoom, height_zoom);
 
         glClear(GL_COLOR_BUFFER_BIT);
 
