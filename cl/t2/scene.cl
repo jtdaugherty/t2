@@ -3,24 +3,22 @@
 
 static void buildscene(struct Scene *s)
 {
-    s->spheres[s->numSpheres].center = (float3)(1, 1, 0);
-    s->spheres[s->numSpheres].radius = 1;
-    s->spheres[s->numSpheres].material = 0;
-    s->numSpheres = 1;
+    s->spheres[0].center = (float3)(1, 1, 0);
+    s->spheres[0].radius = 1;
+    s->spheres[0].material = 0;
 
-    s->spheres[s->numSpheres].center = (float3)(-1, 1, 0);
-    s->spheres[s->numSpheres].radius = 1;
-    s->spheres[s->numSpheres].material = 1;
-    s->numSpheres = 2;
+    s->spheres[1].center = (float3)(-1, 1, 0);
+    s->spheres[1].radius = 1;
+    s->spheres[1].material = 1;
 
-    s->spheres[s->numSpheres].center = (float3)(0, 1, -sqrt(6.f));
-    s->spheres[s->numSpheres].radius = 1;
-    s->spheres[s->numSpheres].material = 1;
+    s->spheres[2].center = (float3)(0, 1, -sqrt(6.f));
+    s->spheres[2].radius = 1;
+    s->spheres[2].material = 1;
     s->numSpheres = 3;
 
-    s->planes[s->numPlanes].normal = (float3)(0, 1, 0);
-    s->planes[s->numPlanes].origin = (float3)(0, 0, 0);
-    s->planes[s->numPlanes].material = 2;
+    s->planes[0].normal = (float3)(0, 1, 0);
+    s->planes[0].origin = (float3)(0, 0, 0);
+    s->planes[0].material = 2;
     s->numPlanes = 1;
 
     s->materials[0].refl = 0;

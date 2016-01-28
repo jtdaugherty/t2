@@ -13,7 +13,6 @@ __kernel void raytracer(__write_only image2d_t output, uint width, uint height,
         float3 position, float3 heading)
 {
     struct Scene s;
-    s.numSpheres = s.numLights = s.numMaterials = s.numPlanes = 0;
     buildscene(&s);
 
     struct Camera camera;
