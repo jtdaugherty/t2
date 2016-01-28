@@ -6,7 +6,6 @@
 
 #include <math.h>
 #include <sys/stat.h>
-#include <sys/time.h>
 #include <string.h>
 
 #include <t2/logging.h>
@@ -192,11 +191,6 @@ int main()
         exit(1);
     }
     
-    float frames = 0;
-    struct timeval start;
-
-    gettimeofday(&start, NULL);
-
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
     {
@@ -286,20 +280,6 @@ int main()
 
         /* Poll for and process events */
         glfwPollEvents();
-
-        if (frames >= 200.0) {
-            struct timeval now;
-            gettimeofday(&now, NULL);
-
-            // Measure difference, compute average frame rate
-            float fps = (float) frames / (float) (now.tv_sec - start.tv_sec);
-            log_info("FPS: %f", fps);
-
-            start = now;
-            frames = 0.0;
-        } else {
-            frames += 1.0;
-        }
     }
 
     /* Finalization */
