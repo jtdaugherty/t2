@@ -15,7 +15,7 @@ static float3 camera_ray_direction(struct Camera *camera, float2 point)
                      (camera->vpdist * camera->w));
 }
 
-static float4 camera_render(struct Camera *camera, struct Scene *scene, int width, int height, int2 coord)
+static float4 camera_render(struct Camera *camera, struct Scene *scene, int width, int height, float2 coord)
 {
     float2 pp = (float2)(coord.x - (width / 2.f),
                          coord.y - (height / 2.f));

@@ -16,14 +16,27 @@ __kernel void raytracer(__write_only image2d_t output, uint width, uint height,
     buildscene(&s);
 
     struct Camera camera;
+
     camera.eye = position;
     camera.lookat = position + heading;
     camera.up = (float3)(0, 1, 0);
     camera.vpdist = 500;
     camera_compute_uvw(&camera);
 
+    float4 cVal = (float4)(0);
     int2 pos = (int2)(get_global_id(0), get_global_id(1));
-    float4 cVal = camera_render(&camera, &s, width, height, pos);
+    float2 sample;
+
+    sample = (float2)(pos.x - 0.25, pos.y - 0.25);
+    cVal += camera_render(&camera, &s, width, height, sample);
+    sample = (float2)(pos.x - 0.25, pos.y + 0.25);
+    cVal += camera_render(&camera, &s, width, height, sample);
+    sample = (float2)(pos.x + 0.25, pos.y - 0.25);
+    cVal += camera_render(&camera, &s, width, height, sample);
+    sample = (float2)(pos.x + 0.25, pos.y + 0.25);
+    cVal += camera_render(&camera, &s, width, height, sample);
+
+    cVal /= 4.f;
 
     if (isnan(cVal.x)) {
         cVal = (float4)(1, 0, 0, 1);
