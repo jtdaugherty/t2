@@ -2,8 +2,13 @@
 Setup
 -----
 
-To install `glfw3`:
+To install dependencies:
 ```
-brew install glfw3 --without-shared-library --with-examples
-brew install glew
+$ brew install glfw3 --without-shared-library --with-examples
+$ brew install glew
+```
+then
+```
+$ make
+$ ./t2
 ```
