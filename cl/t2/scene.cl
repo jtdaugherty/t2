@@ -22,25 +22,21 @@ static void buildscene(struct Scene *s)
     s->numPlanes = 1;
 
     s->materials[0].refl = 0;
-    s->materials[0].refr = 0;
     s->materials[0].spec = 127;
     s->materials[0].amb  = (float4)(1, 0.7f, 0.7f, 1);
     s->materials[0].diff = 1;
 
     s->materials[1].refl = 1;
-    s->materials[1].refr = 0;
     s->materials[1].spec = 127;
     s->materials[1].amb  = (float4)(0, 0.7f, 0.7f, 1);
     s->materials[1].diff = 1;
 
     s->materials[2].refl = 0;
-    s->materials[2].refr = 0;
     s->materials[2].spec = 127;
     s->materials[2].amb  = (float4)(1);
     s->materials[2].diff = 1;
 
     s->materials[3].refl = 1;
-    s->materials[3].refr = 0;
     s->materials[3].spec = 127;
     s->materials[3].amb  = (float4)(0.7f, 0, 0.7f, 1);
     s->materials[3].diff = 1;

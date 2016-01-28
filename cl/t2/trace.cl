@@ -65,7 +65,7 @@ static float shadowray(struct Scene *s, float3 L, float3 P)
     return findintersection(s, &light, 0) ? 0.f : 1.f;
 }
 
-static float4 raytrace(struct Scene *s, struct RayStack *stack, struct Ray *r, float refr, int depth)
+static float4 raytrace(struct Scene *s, struct RayStack *stack, struct Ray *r, int depth)
 {
     float4 color = (float4)(0, 0, 0, 0);
 
@@ -105,26 +105,7 @@ static float4 raytrace(struct Scene *s, struct RayStack *stack, struct Ray *r, f
         R.origin = P + refl * EPSILON;
         R.dir = refl;
 
-        push(stack, &R, refr, depth + 1);
-    }
-
-    if(m->refr > 0)
-    {
-        float3 refrN = N * (float)result;
-        float n = refr / m->refr;
-        float cos_i = -dot(refrN, r->dir);
-        float cos_t2 = 1.f - n * n * (1 - cos_i * cos_i);
-
-        if(cos_t2 > 0)
-        {
-            float3 T = n * r->dir + (n * cos_i - sqrt(cos_t2)) * refrN;
-
-            struct Ray R;
-            R.origin = P + T * EPSILON;
-            R.dir = T;
-
-            push(stack, &R, m->refr, depth + 1);
-        }
+        push(stack, &R, depth + 1);
     }
 
     return color;
@@ -134,14 +115,14 @@ static float4 recursivetrace(struct Scene *s, struct Ray *r)
 {
     struct RayStack stack;
     stack.top = 0;
-    push(&stack, r, 1.f, 0);
+    push(&stack, r, 0);
 
     float4 c = (float4)(0, 0, 0, 0);
 
     while(stack.top > 0)
     {
         stack.top--;
-        c += raytrace(s, &stack, &stack.r[stack.top], stack.refr[stack.top], stack.depth[stack.top]);
+        c += raytrace(s, &stack, &stack.r[stack.top], stack.depth[stack.top]);
     }
 
     return c;

@@ -47,7 +47,6 @@ struct Light
 struct Material
 {
     float refl;
-    float refr;
     float diff;
     float spec;
     float4 amb;
