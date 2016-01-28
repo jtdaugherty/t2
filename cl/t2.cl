@@ -9,15 +9,16 @@
 #include <t2/trace.cl>
 #include <t2/camera.cl>
 
-__kernel void raytracer(__write_only image2d_t output, uint width, uint height, float z, float x)
+__kernel void raytracer(__write_only image2d_t output, uint width, uint height,
+        float3 position, float3 heading)
 {
     struct Scene s;
     s.numSpheres = s.numLights = s.numMaterials = s.numPlanes = 0;
     buildscene(&s);
 
     struct Camera camera;
-    camera.eye = (float3)(x, 1, 10 + z);
-    camera.lookat = (float3)(x, 1, z);
+    camera.eye = position;
+    camera.lookat = position + heading;
     camera.up = (float3)(0, 1, 0);
     camera.vpdist = 500;
     camera_compute_uvw(&camera);

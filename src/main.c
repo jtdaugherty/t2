@@ -4,6 +4,7 @@
 #include <OpenGL/gl.h>
 #include <GLFW/glfw3.h>
 
+#include <math.h>
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <string.h>
@@ -18,8 +19,48 @@
 #include <t2/texture.h>
  
 int global_log_level = LOG_DEBUG;
-float zVal = -5;
-float xVal = 0;
+
+// Position vector
+cl_float position[3] = { 0.0, 1.0, -10.0 };
+
+// Heading vector
+cl_float heading[3] = { 0.0, 0.0, 1.0 };
+
+double cursorX;
+double cursorY;
+
+void rotateHeading(float angle)
+{
+    heading[0] = cos(angle) * heading[0] - sin(angle) * heading[2];
+    heading[2] = sin(angle) * heading[0] + cos(angle) * heading[2];
+}
+
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
+{
+    if (button != GLFW_MOUSE_BUTTON_LEFT)
+        return;
+
+    if (action == GLFW_PRESS)
+    {
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        glfwGetCursorPos(window, &cursorX, &cursorY);
+    } else
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+}
+
+void cursor_position_callback(GLFWwindow* window, double x, double y)
+{
+    if (glfwGetInputMode(window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED)
+    {
+        float angleDiff = (float) (x - cursorX) / 80.f;
+
+        // Rotate the heading vector by this much
+        rotateHeading(angleDiff);
+
+        cursorX = x;
+        cursorY = y;
+    }
+}
 
 static void key_callback(GLFWwindow* window, int key, int scancode,
         int action, int mods)
@@ -34,19 +75,33 @@ static void key_callback(GLFWwindow* window, int key, int scancode,
     if (QUIT_KEY)
         glfwSetWindowShouldClose(window, GL_TRUE);
 
-    float vel = 0.5;
+    // Movement keys translate the position vector based on the heading
+    float vel = 0.2;
+    float headingX = 0.0;
+    float headingZ = 0.0;
 
-    if (D_KEY)
-        xVal += vel;
+    if (W_KEY) {
+        headingX = vel * heading[0];
+        headingZ = vel * heading[2];
+    }
 
-    if (A_KEY)
-        xVal -= vel;
+    if (S_KEY) {
+        headingX = -1 * vel * heading[0];
+        headingZ = -1 * vel * heading[2];
+    }
 
-    if (W_KEY)
-        zVal -= vel;
+    if (D_KEY) {
+        headingX = -1 * vel * heading[2];
+        headingZ = vel * heading[0];
+    }
 
-    if (S_KEY)
-        zVal += vel;
+    if (A_KEY) {
+        headingX = vel * heading[2];
+        headingZ = -1 * vel * heading[0];
+    }
+
+    position[0] += headingX;
+    position[2] += headingZ;
 }
 
 int main()
@@ -89,6 +144,8 @@ int main()
     log_info("Using GLEW %s", glewGetString(GLEW_VERSION));
     
     glfwSetKeyCallback(window, key_callback);
+    glfwSetMouseButtonCallback(window, mouse_button_callback);
+    glfwSetCursorPosCallback(window, cursor_position_callback);
 
     /* Make the window's context current */
     glfwMakeContextCurrent(window);
@@ -162,13 +219,13 @@ int main()
             exit(1);
         }
 
-        ret = clSetKernelArg(kernel, 3, sizeof(zVal), (void *)&zVal);
+        ret = clSetKernelArg(kernel, 3, sizeof(position), (void *)position);
         if (ret) {
             log_error("Could not set kernel argument, ret %d", ret);
             exit(1);
         }
 
-        ret = clSetKernelArg(kernel, 4, sizeof(xVal), (void *)&xVal);
+        ret = clSetKernelArg(kernel, 4, sizeof(heading), (void *)heading);
         if (ret) {
             log_error("Could not set kernel argument, ret %d", ret);
             exit(1);
