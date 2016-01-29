@@ -112,11 +112,8 @@ static void buildscene(struct Scene *s)
     s->numMaterials = 4;
 
     s->lights[0].center = (float3)(-4, 8, 0);
-    s->lights[0].strength = 0.7;
-    s->lights[0].color = (float4)(1, 0.7, 0.7, 1);
+    s->lights[0].strength = 1;
+    s->lights[0].color = (float4)(1.0, 243.f/255.f, 168.f/255.f, 1);
 
-    s->lights[1].center = (float3)(4, 6, 0);
-    s->lights[1].strength = 0.2;
-    s->lights[1].color = (float4)(0.7, 0.7, 1, 1);
-    s->numLights = 2;
+    s->numLights = 1;
 }
