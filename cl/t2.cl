@@ -15,6 +15,7 @@ __kernel void raytracer(
         __write_only image2d_t output,
         uint width, uint height,
         float3 position, float3 heading,
+        float lens_radius,
         __global float2 *squareSampleSets,
         __global float2 *diskSampleSets,
         int numSampleSets,
@@ -38,7 +39,7 @@ __kernel void raytracer(
     camera.up = (float3)(0, 1, 0);
     camera.vpdist = 3;
     camera.fpdist = 4;
-    camera.lens_radius = 0.07;
+    camera.lens_radius = lens_radius;
     thinlens_camera_compute_uvw(&camera);
 
     int2 pos = (int2)(get_global_id(0), get_global_id(1));

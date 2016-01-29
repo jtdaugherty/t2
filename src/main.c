@@ -18,6 +18,8 @@
 #include <t2/opencl_setup.h>
 #include <t2/shader_setup.h>
 #include <t2/texture.h>
+
+#define MAXF(a, b) ((a) > (b) ? (a) : (b))
  
 int global_log_level = LOG_DEBUG;
 
@@ -26,6 +28,9 @@ cl_float position[3] = { 0, 1.0, -5.0 };
 
 // Heading vector
 cl_float heading[3] = { 0.0, 0.0, 1.0 };
+
+// Camera lens radius
+cl_float lens_radius = 0.07;
 
 cl_uint sampleIdx = 0;
 
@@ -101,18 +106,34 @@ static void key_callback(GLFWwindow* window, int key, int scancode,
 #define MOVE_LEFT       (PRESS(GLFW_KEY_S))
 #define DECREASE_DEPTH  (PRESS(GLFW_KEY_MINUS))
 #define INCREASE_DEPTH  (PRESS(GLFW_KEY_EQUAL) && SHIFT)
+#define DECREASE_RADIUS (PRESS(GLFW_KEY_R) && (!SHIFT))
+#define INCREASE_RADIUS (PRESS(GLFW_KEY_R) && SHIFT)
 
     if (QUIT)
         glfwSetWindowShouldClose(window, GL_TRUE);
 
-    if (DECREASE_DEPTH) {
+    if (DECREASE_DEPTH && traceDepth > 0) {
         sampleIdx = 0;
         traceDepth = traceDepth == 0 ? 0 : traceDepth - 1;
+        log_info("Trace depth: %d", traceDepth);
     }
 
     if (INCREASE_DEPTH) {
         sampleIdx = 0;
         traceDepth++;
+        log_info("Trace depth: %d", traceDepth);
+    }
+
+    if (DECREASE_RADIUS && lens_radius > 0.0) {
+        lens_radius = MAXF(lens_radius - 0.01, 0.0);
+        sampleIdx = 0;
+        log_info("Lens radius: %f", lens_radius);
+    }
+
+    if (INCREASE_RADIUS) {
+        lens_radius += 0.01;
+        sampleIdx = 0;
+        log_info("Lens radius: %f", lens_radius);
     }
 
     // Movement keys translate the position vector based on the heading
@@ -397,73 +418,21 @@ int main()
             copyTexture(fbo, textureWrite, textureRead, width, height);
 
             /* Set OpenCL Kernel Parameters */
-            ret = clSetKernelArg(kernel, 0, sizeof(cl_mem), (void *)&texmemRead);
-            if (ret) {
-                log_error("Could not set kernel argument, ret %d", ret);
-                exit(1);
-            }
+            ret = 0;
+            ret |= clSetKernelArg(kernel, 0, sizeof(cl_mem), (void *)&texmemRead);
+            ret |= clSetKernelArg(kernel, 1, sizeof(cl_mem), (void *)&texmemWrite);
+            ret |= clSetKernelArg(kernel, 2, sizeof(width), (void *)&width);
+            ret |= clSetKernelArg(kernel, 3, sizeof(height), (void *)&height);
+            ret |= clSetKernelArg(kernel, 4, sizeof(position), (void *)position);
+            ret |= clSetKernelArg(kernel, 5, sizeof(heading), (void *)heading);
+            ret |= clSetKernelArg(kernel, 6, sizeof(lens_radius), (void *)&lens_radius);
+            ret |= clSetKernelArg(kernel, 7, sizeof(cl_mem), (void *)&squareSampleBuf);
+            ret |= clSetKernelArg(kernel, 8, sizeof(cl_mem), (void *)&diskSampleBuf);
+            ret |= clSetKernelArg(kernel, 9, sizeof(cl_int), (void *)&numSampleSets);
+            ret |= clSetKernelArg(kernel, 10, sizeof(cl_int), (void *)&sampleRoot);
+            ret |= clSetKernelArg(kernel, 11, sizeof(sampleIdx), (void *)&sampleIdx);
+            ret |= clSetKernelArg(kernel, 12, sizeof(traceDepth), (void *)&traceDepth);
 
-            ret = clSetKernelArg(kernel, 1, sizeof(cl_mem), (void *)&texmemWrite);
-            if (ret) {
-                log_error("Could not set kernel argument, ret %d", ret);
-                exit(1);
-            }
-
-            ret = clSetKernelArg(kernel, 2, sizeof(width), (void *)&width);
-            if (ret) {
-                log_error("Could not set kernel argument, ret %d", ret);
-                exit(1);
-            }
-
-            ret = clSetKernelArg(kernel, 3, sizeof(height), (void *)&height);
-            if (ret) {
-                log_error("Could not set kernel argument, ret %d", ret);
-                exit(1);
-            }
-
-            ret = clSetKernelArg(kernel, 4, sizeof(position), (void *)position);
-            if (ret) {
-                log_error("Could not set kernel argument, ret %d", ret);
-                exit(1);
-            }
-
-            ret = clSetKernelArg(kernel, 5, sizeof(heading), (void *)heading);
-            if (ret) {
-                log_error("Could not set kernel argument, ret %d", ret);
-                exit(1);
-            }
-
-            ret = clSetKernelArg(kernel, 6, sizeof(cl_mem), (void *)&squareSampleBuf);
-            if (ret) {
-                log_error("Could not set kernel argument, ret %d", ret);
-                exit(1);
-            }
-
-            ret = clSetKernelArg(kernel, 7, sizeof(cl_mem), (void *)&diskSampleBuf);
-            if (ret) {
-                log_error("Could not set kernel argument, ret %d", ret);
-                exit(1);
-            }
-
-            ret = clSetKernelArg(kernel, 8, sizeof(cl_int), (void *)&numSampleSets);
-            if (ret) {
-                log_error("Could not set kernel argument, ret %d", ret);
-                exit(1);
-            }
-
-            ret = clSetKernelArg(kernel, 9, sizeof(cl_int), (void *)&sampleRoot);
-            if (ret) {
-                log_error("Could not set kernel argument, ret %d", ret);
-                exit(1);
-            }
-
-            ret = clSetKernelArg(kernel, 10, sizeof(sampleIdx), (void *)&sampleIdx);
-            if (ret) {
-                log_error("Could not set kernel argument, ret %d", ret);
-                exit(1);
-            }
-
-            ret = clSetKernelArg(kernel, 11, sizeof(traceDepth), (void *)&traceDepth);
             if (ret) {
                 log_error("Could not set kernel argument, ret %d", ret);
                 exit(1);
