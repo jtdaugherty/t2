@@ -25,6 +25,8 @@ cl_float position[3] = { 0.0, 1.0, -10.0 };
 // Heading vector
 cl_float heading[3] = { 0.0, 0.0, 1.0 };
 
+cl_uint sampleIdx = 0;
+
 double cursorX;
 double cursorY;
 
@@ -71,6 +73,8 @@ void cursor_position_callback(GLFWwindow* window, double x, double y)
 
         cursorX = x;
         cursorY = y;
+
+        sampleIdx = 0;
     }
 }
 
@@ -111,6 +115,9 @@ static void key_callback(GLFWwindow* window, int key, int scancode,
         headingX = vel * heading[2];
         headingZ = -1 * vel * heading[0];
     }
+
+    if (headingX != 0 || headingZ != 0)
+        sampleIdx = 0;
 
     position[0] += headingX;
     position[2] += headingZ;
@@ -197,66 +204,138 @@ int main()
     glfwGetWindowSize(window, &width, &height);
     glfwSwapInterval(1);
 
-    GLuint texture = make_texture(width, height);
-    cl_mem texmem = clCreateFromGLTexture(context, CL_MEM_READ_WRITE, GL_TEXTURE_2D, 0, texture, &ret);
+    GLuint textureRead = make_texture(width, height);
+    cl_mem texmemRead = clCreateFromGLTexture(context, CL_MEM_READ_WRITE, GL_TEXTURE_2D, 0, textureRead, &ret);
     if (ret) {
-        log_error("Could not create shared OpenCL/OpenGL texture, ret %d", ret);
+        log_error("Could not create shared OpenCL/OpenGL texture 1, ret %d", ret);
         exit(1);
     }
-    
+
+    GLuint textureWrite = make_texture(width, height);
+    cl_mem texmemWrite = clCreateFromGLTexture(context, CL_MEM_READ_WRITE, GL_TEXTURE_2D, 0, textureWrite, &ret);
+    if (ret) {
+        log_error("Could not create shared OpenCL/OpenGL texture 2, ret %d", ret);
+        exit(1);
+    }
+
+    cl_float samples[] = {
+        -0.25, -0.25,
+        -0.25, 0.25,
+        0.25, -0.25,
+        0.25, 0.25
+    };
+
+    cl_mem sampleBuf = clCreateBuffer(context, CL_MEM_USE_HOST_PTR|CL_MEM_READ_ONLY,
+            sizeof(samples), samples, &ret);
+    if (ret) {
+        log_error("Could not create sample buffer, ret %d", ret);
+        exit(1);
+    }
+
+    cl_uint maxSamples = 4;
+
+    GLuint fbo;
+    glGenFramebuffers(1, &fbo);
+
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
     {
-        /* Set OpenCL Kernel Parameters */
-        ret = clSetKernelArg(kernel, 0, sizeof(cl_mem), (void *)&texmem);
-        if (ret) {
-            log_error("Could not set kernel argument, ret %d", ret);
-            exit(1);
-        }
+        if (sampleIdx < maxSamples) {
+            glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+            glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, 
+                    GL_TEXTURE_2D, textureWrite, 0);
+            glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, 
+                    GL_TEXTURE_2D, textureRead, 0);
+            glReadBuffer(GL_COLOR_ATTACHMENT0);
+            glDrawBuffer(GL_COLOR_ATTACHMENT1);
+            glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, 
+                    GL_COLOR_BUFFER_BIT, GL_NEAREST);
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-        ret = clSetKernelArg(kernel, 1, sizeof(width), (void *)&width);
-        if (ret) {
-            log_error("Could not set kernel argument, ret %d", ret);
-            exit(1);
-        }
+            /* Set OpenCL Kernel Parameters */
+            ret = clSetKernelArg(kernel, 0, sizeof(cl_mem), (void *)&texmemRead);
+            if (ret) {
+                log_error("Could not set kernel argument, ret %d", ret);
+                exit(1);
+            }
 
-        ret = clSetKernelArg(kernel, 2, sizeof(height), (void *)&height);
-        if (ret) {
-            log_error("Could not set kernel argument, ret %d", ret);
-            exit(1);
-        }
+            ret = clSetKernelArg(kernel, 1, sizeof(cl_mem), (void *)&texmemWrite);
+            if (ret) {
+                log_error("Could not set kernel argument, ret %d", ret);
+                exit(1);
+            }
 
-        ret = clSetKernelArg(kernel, 3, sizeof(position), (void *)position);
-        if (ret) {
-            log_error("Could not set kernel argument, ret %d", ret);
-            exit(1);
-        }
+            ret = clSetKernelArg(kernel, 2, sizeof(width), (void *)&width);
+            if (ret) {
+                log_error("Could not set kernel argument, ret %d", ret);
+                exit(1);
+            }
 
-        ret = clSetKernelArg(kernel, 4, sizeof(heading), (void *)heading);
-        if (ret) {
-            log_error("Could not set kernel argument, ret %d", ret);
-            exit(1);
-        }
+            ret = clSetKernelArg(kernel, 3, sizeof(height), (void *)&height);
+            if (ret) {
+                log_error("Could not set kernel argument, ret %d", ret);
+                exit(1);
+            }
 
-        ret = clEnqueueAcquireGLObjects(command_queue, 1, &texmem, 0, NULL, NULL);
-        if (ret) {
-            log_error("Could not enqueue GL object acquisition, ret %d", ret);
-            exit(1);
-        }
+            ret = clSetKernelArg(kernel, 4, sizeof(position), (void *)position);
+            if (ret) {
+                log_error("Could not set kernel argument, ret %d", ret);
+                exit(1);
+            }
 
-        /* Execute OpenCL Kernel */
-        size_t global_work_size[2] = { width, height };
-        ret = clEnqueueNDRangeKernel(command_queue, kernel, 2, NULL, global_work_size, NULL, 0, NULL, NULL);
-        if (ret) {
-            log_error("Could not enqueue task\n");
-            exit(1);
-        }
+            ret = clSetKernelArg(kernel, 5, sizeof(heading), (void *)heading);
+            if (ret) {
+                log_error("Could not set kernel argument, ret %d", ret);
+                exit(1);
+            }
 
-        // Before returning the objects to OpenGL, we sync to make sure OpenCL is done.
-        ret = clEnqueueReleaseGLObjects(command_queue, 1, &texmem, 0, NULL, NULL);
-        if (ret) {
-            log_error("Could not enqueue GL object acquisition, ret %d", ret);
-            exit(1);
+            ret = clSetKernelArg(kernel, 6, sizeof(cl_mem), (void *)&sampleBuf);
+            if (ret) {
+                log_error("Could not set kernel argument, ret %d", ret);
+                exit(1);
+            }
+
+            ret = clSetKernelArg(kernel, 7, sizeof(sampleIdx), (void *)&sampleIdx);
+            if (ret) {
+                log_error("Could not set kernel argument, ret %d", ret);
+                exit(1);
+            }
+
+            ret = clEnqueueAcquireGLObjects(command_queue, 1, &texmemRead, 0, NULL, NULL);
+            if (ret) {
+                log_error("Could not enqueue GL object acquisition, ret %d", ret);
+                exit(1);
+            }
+
+            ret = clEnqueueAcquireGLObjects(command_queue, 1, &texmemWrite, 0, NULL, NULL);
+            if (ret) {
+                log_error("Could not enqueue GL object acquisition, ret %d", ret);
+                exit(1);
+            }
+
+            /* Execute OpenCL Kernel */
+            size_t global_work_size[2] = { width, height };
+            ret = clEnqueueNDRangeKernel(command_queue, kernel, 2, NULL, global_work_size, NULL, 0, NULL, NULL);
+            if (ret) {
+                log_error("Could not enqueue task");
+                exit(1);
+            }
+
+            // Before returning the objects to OpenGL, we sync to make sure OpenCL is done.
+            ret = clEnqueueReleaseGLObjects(command_queue, 1, &texmemRead, 0, NULL, NULL);
+            if (ret) {
+                log_error("Could not enqueue GL object acquisition, ret %d", ret);
+                exit(1);
+            }
+
+            ret = clEnqueueReleaseGLObjects(command_queue, 1, &texmemWrite, 0, NULL, NULL);
+            if (ret) {
+                log_error("Could not enqueue GL object acquisition, ret %d", ret);
+                exit(1);
+            }
+
+            log_debug("Done rendering sample %d", sampleIdx);
+            sampleIdx++;
         }
 
         glClear(GL_COLOR_BUFFER_BIT);
@@ -264,7 +343,7 @@ int main()
         glUseProgram(res.shader_program);
 
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, texture);
+        glBindTexture(GL_TEXTURE_2D, textureWrite);
         glUniform1i(res.texture_uniform, 0);
 
         glBindBuffer(GL_ARRAY_BUFFER, res.vertex_buffer);
