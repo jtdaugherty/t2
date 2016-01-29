@@ -196,18 +196,37 @@ void mapToUnitDisk(float *x, float *y)
     *y = r * sin(phi);
 }
 
-void generateSampleSet(float *samples, int sampleRoot, void(*map)(float*, float*))
+void generateRandomSampleSet(float *samples, int sampleRoot, void(*map)(float*, float*))
 {
-    float r2 = (float)(sampleRoot * sampleRoot);
+    // float r2 = (float)(sampleRoot * sampleRoot);
     for (int i = 0; i < sampleRoot; i++) {
         for (int j = 0; j < sampleRoot; j++) {
-            float a = randFloat();
-            float b = randFloat();
-            float littleI = sampleRoot - 1 - i;
-            float littleJ = sampleRoot - 1 - j;
+            // float a = randFloat();
+            // float b = randFloat();
+            // float littleI = sampleRoot - 1 - i;
+            // float littleJ = sampleRoot - 1 - j;
 
-            float x = ((float)i) / ((float)sampleRoot) + (littleI + a) / r2;
-            float y = ((float)j) / ((float)sampleRoot) + (littleJ + b) / r2;
+            // float x = ((float)i) / ((float)sampleRoot) + (littleI + a) / r2;
+            // float y = ((float)j) / ((float)sampleRoot) + (littleJ + b) / r2;
+            float x = randFloat();
+            float y = randFloat();
+
+            if (map)
+                map(&x, &y);
+
+            samples[i * sampleRoot * 2 + j * 2]     = x;
+            samples[i * sampleRoot * 2 + j * 2 + 1] = y;
+        }
+    }
+}
+
+void generateJitteredSampleSet(float *samples, int sampleRoot, void(*map)(float*, float*))
+{
+    float inc = 1.0 / ((float) sampleRoot);
+    for (int i = 0; i < sampleRoot; i++) {
+        for (int j = 0; j < sampleRoot; j++) {
+            float x = (i * inc) + randFloat() * inc;
+            float y = (j * inc) + randFloat() * inc;
 
             if (map)
                 map(&x, &y);
@@ -319,14 +338,27 @@ int main()
         exit(1);
     }
 
-    int sampleRoot = 4;
+    int sampleRoot = 10;
 
-    log_info("Generating %d samples", sampleRoot * sampleRoot);
+    log_info("Generating %d samples per pixel", sampleRoot * sampleRoot);
 
-    int samplesSize = sizeof(cl_float) * sampleRoot * sampleRoot * 2;
+    int numSampleSets = width * 10;
+    int samplesSize = sizeof(cl_float) * sampleRoot * sampleRoot * 2 * numSampleSets;
+
+    log_info("Samples:");
+    log_info("  Types: square, disk");
+    log_info("  %d sample sets per type", numSampleSets);
+    log_info("  %d samples per set", sampleRoot * sampleRoot);
+    log_info("  %d bytes memory allocated per type", samplesSize);
 
     cl_float *squareSamples = malloc(samplesSize);
-    generateSampleSet(squareSamples, sampleRoot, NULL);
+
+    for (int i = 0; i < numSampleSets; i++) {
+        // Offset in number of floats for this set
+        size_t offset = i * (2 * sampleRoot * sampleRoot);
+        generateJitteredSampleSet(squareSamples + offset, sampleRoot, NULL);
+    }
+
     cl_mem squareSampleBuf = clCreateBuffer(context, CL_MEM_USE_HOST_PTR|CL_MEM_READ_ONLY,
             samplesSize, squareSamples, &ret);
     if (ret) {
@@ -335,7 +367,13 @@ int main()
     }
 
     cl_float *diskSamples = malloc(samplesSize);
-    generateSampleSet(diskSamples, sampleRoot, mapToUnitDisk);
+
+    for (int i = 0; i < numSampleSets; i++) {
+        // Offset in number of floats for this set
+        size_t offset = i * (2 * sampleRoot * sampleRoot);
+        generateJitteredSampleSet(diskSamples + offset, sampleRoot, mapToUnitDisk);
+    }
+
     cl_mem diskSampleBuf = clCreateBuffer(context, CL_MEM_USE_HOST_PTR|CL_MEM_READ_ONLY,
             samplesSize, diskSamples, &ret);
     if (ret) {
@@ -407,13 +445,25 @@ int main()
                 exit(1);
             }
 
-            ret = clSetKernelArg(kernel, 8, sizeof(sampleIdx), (void *)&sampleIdx);
+            ret = clSetKernelArg(kernel, 8, sizeof(cl_int), (void *)&numSampleSets);
             if (ret) {
                 log_error("Could not set kernel argument, ret %d", ret);
                 exit(1);
             }
 
-            ret = clSetKernelArg(kernel, 9, sizeof(traceDepth), (void *)&traceDepth);
+            ret = clSetKernelArg(kernel, 9, sizeof(cl_int), (void *)&sampleRoot);
+            if (ret) {
+                log_error("Could not set kernel argument, ret %d", ret);
+                exit(1);
+            }
+
+            ret = clSetKernelArg(kernel, 10, sizeof(sampleIdx), (void *)&sampleIdx);
+            if (ret) {
+                log_error("Could not set kernel argument, ret %d", ret);
+                exit(1);
+            }
+
+            ret = clSetKernelArg(kernel, 11, sizeof(traceDepth), (void *)&traceDepth);
             if (ret) {
                 log_error("Could not set kernel argument, ret %d", ret);
                 exit(1);

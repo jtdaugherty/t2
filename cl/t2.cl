@@ -15,8 +15,10 @@ __kernel void raytracer(
         __write_only image2d_t output,
         uint width, uint height,
         float3 position, float3 heading,
-        __global float2 *squareSamples,
-        __global float2 *diskSamples,
+        __global float2 *squareSampleSets,
+        __global float2 *diskSampleSets,
+        int numSampleSets,
+        int sampleRoot,
         uint sampleIdx,
         uint traceDepth)
 {
@@ -45,6 +47,13 @@ __kernel void raytracer(
     if (sampleIdx > 0) {
         origCVal = read_imagef(input, pos);
     }
+
+    // Size in float2s
+    int sampleSetSize = sampleRoot * sampleRoot;
+    int sampleSetIndex = ((pos.x * height) + pos.y) % numSampleSets;
+    int offset = sampleSetIndex * sampleSetSize;
+    __global float2 *squareSamples = squareSampleSets + offset;
+    __global float2 *diskSamples = diskSampleSets + offset;
 
     float2 squareSample = squareSamples[sampleIdx];
     float2 diskSample = diskSamples[sampleIdx];
