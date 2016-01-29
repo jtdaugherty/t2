@@ -281,7 +281,7 @@ int main()
     int numSampleSets = width * 10;
     int samplesSize = sizeof(cl_float) * sampleRoot * sampleRoot * 2 * numSampleSets;
 
-    log_info("Samples:");
+    log_info("Sample data:");
     log_info("  Types: square, disk");
     log_info("  %d sample sets per type", numSampleSets);
     log_info("  %d samples per set", sampleRoot * sampleRoot);
