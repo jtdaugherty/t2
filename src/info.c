@@ -1,4 +1,6 @@
 
+#include <string.h>
+
 #include <t2/info.h>
 #include <t2/logging.h>
 
@@ -20,10 +22,24 @@ cl_int logDeviceInfo(cl_device_id device_id) {
         return ret;
     }
 
-    log_info("Device details:");
+    log_info("OpenCL device details:");
     log_info("  Name: %s", deviceName);
     log_info("  Vendor: %s", vendorName);
-    log_info("  Extensions: %s", extension_list);
+    log_info("  Extensions:");
+
+    char *start = extension_list;
+    char *found = NULL;
+    char extName[128];
+    int len = 0;
+
+    while ((found = strchr(start, ' ')) != NULL) {
+        len = found - start;
+        memcpy(extName, start, len);
+        extName[len] = 0;
+        log_info("    %s", extName);
+        start = found + 1;
+    }
+
     return 0;
 }
 
@@ -44,7 +60,8 @@ cl_int logPlatformInfo(cl_platform_id platform_id) {
         return ret;
     }
 
-    log_info("Platform profile: %s", platform_profile);
-    log_info("Platform version: %s", platform_version);
+    log_info("OpenCL platform:");
+    log_info("  Profile: %s", platform_profile);
+    log_info("  Version: %s", platform_version);
     return 0;
 }

@@ -160,7 +160,11 @@ int main()
         exit(1);
     }
 
-    log_info("Using GLEW %s", glewGetString(GLEW_VERSION));
+    int maj, min, rev;
+    glfwGetVersion(&maj, &min, &rev);
+    log_info("GLFW version: %d.%d.%d", maj, min, rev);
+
+    log_info("GLEW version: %s", glewGetString(GLEW_VERSION));
     
     glfwSetKeyCallback(window, key_callback);
     glfwSetMouseButtonCallback(window, mouse_button_callback);
@@ -220,6 +224,8 @@ int main()
 
     int sampleRoot = 4;
 
+    log_info("Generating %d samples", sampleRoot * sampleRoot);
+
     int samplesSize = sizeof(cl_float) * sampleRoot * sampleRoot * 2;
     cl_float *samples = malloc(samplesSize);
 
@@ -244,6 +250,8 @@ int main()
     glGenFramebuffers(1, &fbo);
 
     char title[64];
+
+    log_info("Ready.");
 
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))

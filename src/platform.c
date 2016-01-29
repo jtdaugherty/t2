@@ -17,13 +17,15 @@ cl_platform_id choosePlatform() {
         exit(1);
     }
 
-    log_info("Found %d platform(s)", ret_num);
-
     if (ret_num < 1) {
         log_error("Could not find suitable platform");
         exit(1);
     }
 
-    log_info("Using first platform");
+    char *s = "";
+    if (ret_num != 1)
+        s = "s";
+
+    log_info("Found %d platform%s, using the first one", ret_num, s);
     return platform_ids[0];
 }

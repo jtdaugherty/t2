@@ -40,8 +40,6 @@ cl_context createOpenCLContext() {
         exit(1);
     }
 
-    log_debug("Created OpenCL context");
-
     return context;
 }
 
@@ -58,7 +56,7 @@ cl_device_id chooseOpenCLDevice(cl_platform_id platform_id, cl_context context)
     }
 
     int num_devices = returned / sizeof(cl_device_id);
-    log_info("Devices found in context: %d", num_devices);
+    log_info("Devices found in OpenCL context: %d", num_devices);
 
     if (num_devices < 1) {
         log_error("No suitable devices available in context, exiting");

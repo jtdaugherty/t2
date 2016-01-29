@@ -114,26 +114,23 @@ GLuint shader_setup(resources *res)
     static const GLushort g_element_buffer_data[] = { 0, 1, 2, 3 };
     
     res->vertex_buffer = make_buffer(GL_ARRAY_BUFFER, g_vertex_buffer_data, sizeof(g_vertex_buffer_data));
-    log_debug("Set up vertex buffer");
     res->element_buffer = make_buffer(GL_ELEMENT_ARRAY_BUFFER, g_element_buffer_data, sizeof(g_element_buffer_data));
-    log_debug("Set up element buffer");
 
     vertex_shader = make_shader(GL_VERTEX_SHADER, "shaders/t2.v.glsl");
     if (!vertex_shader) {
+        log_error("Could not load vertex shader");
         return 1;
     }
-
-    log_debug("Loaded vertex shader");
 
     fragment_shader = make_shader(GL_FRAGMENT_SHADER, "shaders/t2.f.glsl");
     if (!fragment_shader) {
+        log_error("Could not load fragment shader");
         return 1;
     }
 
-    log_debug("Loaded fragment shader");
-
     res->shader_program = make_program(vertex_shader, fragment_shader);
     if (!res->shader_program) {
+        log_error("Could not load construct shader program");
         return 1;
     }
 
