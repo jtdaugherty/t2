@@ -13,7 +13,7 @@ struct Ray
     float3 dir;
 };
 
-struct Camera
+struct PinholeCamera
 {
     float3 eye;
     float3 lookat;
