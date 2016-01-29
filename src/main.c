@@ -158,6 +158,14 @@ static void key_callback(GLFWwindow* window, int key, int scancode,
     position[2] += headingZ;
 }
 
+void logVersionInfo()
+{
+    int maj, min, rev;
+    glfwGetVersion(&maj, &min, &rev);
+    log_info("GLFW version: %d.%d.%d", maj, min, rev);
+    log_info("GLEW version: %s", glewGetString(GLEW_VERSION));
+}
+
 int main()
 {
     cl_platform_id platform_id = NULL;
@@ -197,36 +205,35 @@ int main()
         exit(1);
     }
 
-    int maj, min, rev;
-    glfwGetVersion(&maj, &min, &rev);
-    log_info("GLFW version: %d.%d.%d", maj, min, rev);
+    logVersionInfo();
 
-    log_info("GLEW version: %s", glewGetString(GLEW_VERSION));
-    
     glfwSetKeyCallback(window, key_callback);
     glfwSetMouseButtonCallback(window, mouse_button_callback);
     glfwSetCursorPosCallback(window, cursor_position_callback);
+    glfwGetWindowSize(window, &width, &height);
 
     /* Make the window's context current */
     glfwMakeContextCurrent(window);
 
     /* OpenCL initialization */
 
-    /* Choose an OpenCL platform */
+    /* Choose an OpenCL platform and create a context */
     platform_id = choosePlatform();
     logPlatformInfo(platform_id);
     cl_context context = createOpenCLContext();
 
+    /* Choose an OpenCL device */
     cl_device_id device_id = chooseOpenCLDevice(platform_id, context);
     logDeviceInfo(device_id);
 
+    /* Create a command queue for the device */
     command_queue = clCreateCommandQueue(context, device_id, 0, &ret);
     if (ret) {
         log_error("Could not create command queue, ret %d", ret);
         exit(1);
     }
 
-    /* Create Kernel Program from the source */
+    /* Create kernel program from the source */
     program = readAndBuildProgram(context, device_id, "cl/t2.cl", &ret);
     if (!program) {
         log_error("readAndBuildProgram failed, ret %d", ret);
@@ -240,11 +247,10 @@ int main()
         exit(1);
     }
 
+    /* Set up GLSL shaders */
     ret = shader_setup(&res);
 
-    glfwGetWindowSize(window, &width, &height);
-    glfwSwapInterval(1);
-
+    /* Create rendering texture buffers */
     GLuint textureRead = make_texture(width, height);
     cl_mem texmemRead = clCreateFromGLTexture(context, CL_MEM_READ_WRITE, GL_TEXTURE_2D, 0, textureRead, &ret);
     if (ret) {
@@ -260,26 +266,25 @@ int main()
     }
 
     int sampleRoot = 10;
-
-    log_info("Generating %d samples per pixel", sampleRoot * sampleRoot);
-
     int numSampleSets = width * 10;
     int samplesSize = sizeof(cl_float) * sampleRoot * sampleRoot * 2 * numSampleSets;
 
+    log_info("Generating %d samples per pixel", sampleRoot * sampleRoot);
     log_info("Sample data:");
     log_info("  Types: square, disk");
     log_info("  %d sample sets per type", numSampleSets);
     log_info("  %d samples per set", sampleRoot * sampleRoot);
     log_info("  %d bytes memory allocated per type", samplesSize);
 
+    /* Allocate and populate square sample sets */
     cl_float *squareSamples = malloc(samplesSize);
-
     for (int i = 0; i < numSampleSets; i++) {
         // Offset in number of floats for this set
         size_t offset = i * (2 * sampleRoot * sampleRoot);
         generateJitteredSampleSet(squareSamples + offset, sampleRoot, NULL);
     }
 
+    /* Set up OpenCL buffer reference to square sample memory */
     cl_mem squareSampleBuf = clCreateBuffer(context, CL_MEM_USE_HOST_PTR|CL_MEM_READ_ONLY,
             samplesSize, squareSamples, &ret);
     if (ret) {
@@ -287,14 +292,15 @@ int main()
         exit(1);
     }
 
+    /* Allocate and populate disk sample sets */
     cl_float *diskSamples = malloc(samplesSize);
-
     for (int i = 0; i < numSampleSets; i++) {
         // Offset in number of floats for this set
         size_t offset = i * (2 * sampleRoot * sampleRoot);
         generateJitteredSampleSet(diskSamples + offset, sampleRoot, mapToUnitDisk);
     }
 
+    /* Set up OpenCL buffer reference to disk sample memory */
     cl_mem diskSampleBuf = clCreateBuffer(context, CL_MEM_USE_HOST_PTR|CL_MEM_READ_ONLY,
             samplesSize, diskSamples, &ret);
     if (ret) {
@@ -302,19 +308,26 @@ int main()
         exit(1);
     }
 
+    char title[64];
     cl_uint maxSamples = sampleRoot * sampleRoot;
 
+    glfwSwapInterval(1);
     GLuint fbo;
     glGenFramebuffers(1, &fbo);
 
-    char title[64];
-
     log_info("Ready.");
 
-    /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
     {
         if (sampleIdx < maxSamples) {
+            /* Before we begin collecting a new sample, copy the old
+               write buffer to the read buffer. This is critical because
+               the kernel reads the image data and averages new sample
+               data with it before writing back out, so we need to read
+               this time what we wrote last time. Since OpenCL doesn't
+               support read-write images, we have to have two: one to
+               read, one to write, and some code to copy between them at
+               the right time (now). */
             copyTexture(fbo, textureWrite, textureRead, width, height);
 
             /* Set OpenCL Kernel Parameters */
