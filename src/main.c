@@ -28,10 +28,23 @@ cl_float heading[3] = { 0.0, 0.0, 1.0 };
 double cursorX;
 double cursorY;
 
-void rotateHeading(float angle)
+void normalize(cl_float *vec)
+{
+    cl_float len = sqrt(vec[0] * vec[0] +
+            vec[1] * vec[1] +
+            vec[2] * vec[2]);
+
+    vec[0] /= len;
+    vec[1] /= len;
+    vec[2] /= len;
+}
+
+void rotateHeading(cl_float angle)
 {
     heading[0] = cos(angle) * heading[0] - sin(angle) * heading[2];
     heading[2] = sin(angle) * heading[0] + cos(angle) * heading[2];
+
+    normalize(heading);
 }
 
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
