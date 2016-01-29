@@ -30,3 +30,22 @@ GLuint make_texture(int width, int height)
 
     return texture;
 }
+
+/**
+ * This is only to be used during the rendering loop on an FBO and
+ * textures that have already been set up.
+ */
+void copyTexture(GLuint fbo, GLuint texSrc, GLuint texDst,
+        int width, int height)
+{
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+    glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+            GL_TEXTURE_2D, texSrc, 0);
+    glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT1,
+            GL_TEXTURE_2D, texDst, 0);
+    glReadBuffer(GL_COLOR_ATTACHMENT0);
+    glDrawBuffer(GL_COLOR_ATTACHMENT1);
+    glBlitFramebuffer(0, 0, width, height, 0, 0, width, height,
+            GL_COLOR_BUFFER_BIT, GL_NEAREST);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
