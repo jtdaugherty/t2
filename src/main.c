@@ -84,24 +84,25 @@ static void key_callback(GLFWwindow* window, int key, int scancode,
         int action, int mods)
 {
 #define PRESS(KEY) (key == KEY && (action == GLFW_PRESS || action == GLFW_REPEAT))
-#define QUIT_KEY (PRESS(GLFW_KEY_ESCAPE) || PRESS(GLFW_KEY_Q))
 #define SHIFT (mods & GLFW_MOD_SHIFT)
-#define A_KEY (PRESS(GLFW_KEY_A))
-#define D_KEY (PRESS(GLFW_KEY_D))
-#define W_KEY (PRESS(GLFW_KEY_W))
-#define S_KEY (PRESS(GLFW_KEY_S))
-#define MINUS_KEY (PRESS(GLFW_KEY_MINUS))
-#define PLUS_KEY (PRESS(GLFW_KEY_EQUAL) && SHIFT)
 
-    if (QUIT_KEY)
+#define QUIT            (PRESS(GLFW_KEY_ESCAPE) || PRESS(GLFW_KEY_Q))
+#define MOVE_BACKWARD   (PRESS(GLFW_KEY_A))
+#define MOVE_RIGHT      (PRESS(GLFW_KEY_D))
+#define MOVE_FORWARD    (PRESS(GLFW_KEY_W))
+#define MOVE_LEFT       (PRESS(GLFW_KEY_S))
+#define DECREASE_DEPTH  (PRESS(GLFW_KEY_MINUS))
+#define INCREASE_DEPTH  (PRESS(GLFW_KEY_EQUAL) && SHIFT)
+
+    if (QUIT)
         glfwSetWindowShouldClose(window, GL_TRUE);
 
-    if (MINUS_KEY) {
+    if (DECREASE_DEPTH) {
         sampleIdx = 0;
-        traceDepth = traceDepth == 1 ? 1 : traceDepth - 1;
+        traceDepth = traceDepth == 0 ? 0 : traceDepth - 1;
     }
 
-    if (PLUS_KEY) {
+    if (INCREASE_DEPTH) {
         sampleIdx = 0;
         traceDepth++;
     }
@@ -111,22 +112,22 @@ static void key_callback(GLFWwindow* window, int key, int scancode,
     float headingX = 0.0;
     float headingZ = 0.0;
 
-    if (W_KEY) {
+    if (MOVE_FORWARD) {
         headingX = vel * heading[0];
         headingZ = vel * heading[2];
     }
 
-    if (S_KEY) {
+    if (MOVE_LEFT) {
         headingX = -1 * vel * heading[0];
         headingZ = -1 * vel * heading[2];
     }
 
-    if (D_KEY) {
+    if (MOVE_RIGHT) {
         headingX = -1 * vel * heading[2];
         headingZ = vel * heading[0];
     }
 
-    if (A_KEY) {
+    if (MOVE_BACKWARD) {
         headingX = vel * heading[2];
         headingZ = -1 * vel * heading[0];
     }
