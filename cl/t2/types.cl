@@ -23,6 +23,18 @@ struct PinholeCamera
     float3 u, v, w;
 };
 
+struct ThinLensCamera
+{
+    float3 eye;
+    float3 lookat;
+    float3 up;
+    float vpdist;
+    float fpdist;
+    float lens_radius;
+    // Computed
+    float3 u, v, w;
+};
+
 struct Sphere
 {
     uint  material;

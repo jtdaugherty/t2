@@ -21,7 +21,7 @@
 int global_log_level = LOG_DEBUG;
 
 // Position vector
-cl_float position[3] = { 0.0, 1.0, -10.0 };
+cl_float position[3] = { 2.5, 1.0, -5.0 };
 
 // Heading vector
 cl_float heading[3] = { 0.0, 0.0, 1.0 };
@@ -155,6 +155,40 @@ void copyTexture(GLuint fbo, GLuint texSrc, GLuint texDst,
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
+void mapToUnitDisk(float x, float y, float *mappedX, float *mappedY)
+{
+    float spX, spY, phi, r;
+
+    spX = 2.0 * x - 1.0;
+    spY = 2.0 * y - 1.0;
+
+    if (spX > -spY) {
+        if (spX > spY) {
+            r = spX;
+            phi = spY / spX;
+        } else {
+            r = spY;
+            phi = 2.0 - spX / spY;
+        }
+    } else {
+        if (spX < spY) {
+            r = -spX;
+            phi = 4 + spY / spX;
+        } else {
+            r = -spY;
+            if (spY != 0.0) {
+                phi = 6.0 - spX / spY;
+            } else {
+                phi = 0.0;
+            }
+        }
+    }
+
+    phi *= M_PI / 4.0;
+    *mappedX = r * cos(phi);
+    *mappedY = r * sin(phi);
+}
+
 int main()
 {
     cl_platform_id platform_id = NULL;
@@ -261,20 +295,42 @@ int main()
     log_info("Generating %d samples", sampleRoot * sampleRoot);
 
     int samplesSize = sizeof(cl_float) * sampleRoot * sampleRoot * 2;
-    cl_float *samples = malloc(samplesSize);
+    cl_float *squareSamples = malloc(samplesSize);
 
     float inc = 1.0 / (float) (sampleRoot * 2);
     for (int i = 0; i < sampleRoot; i++) {
         for (int j = 0; j < sampleRoot; j++) {
-            samples[i * sampleRoot * 2 + j * 2]     = (((float) i) * 2 + 1) * inc;
-            samples[i * sampleRoot * 2 + j * 2 + 1] = (((float) j) * 2 + 1) * inc;
+            squareSamples[i * sampleRoot * 2 + j * 2]     = (((float) i) * 2 + 1) * inc;
+            squareSamples[i * sampleRoot * 2 + j * 2 + 1] = (((float) j) * 2 + 1) * inc;
         }
     }
 
-    cl_mem sampleBuf = clCreateBuffer(context, CL_MEM_USE_HOST_PTR|CL_MEM_READ_ONLY,
-            samplesSize, samples, &ret);
+    cl_mem squareSampleBuf = clCreateBuffer(context, CL_MEM_USE_HOST_PTR|CL_MEM_READ_ONLY,
+            samplesSize, squareSamples, &ret);
     if (ret) {
-        log_error("Could not create sample buffer, ret %d", ret);
+        log_error("Could not create square sample buffer, ret %d", ret);
+        exit(1);
+    }
+
+    cl_float *diskSamples = malloc(samplesSize);
+
+    for (int i = 0; i < sampleRoot; i++) {
+        for (int j = 0; j < sampleRoot; j++) {
+            float x = (((float) i) * 2 + 1) * inc;
+            float y = (((float) j) * 2 + 1) * inc;
+            float mappedX, mappedY;
+
+            mapToUnitDisk(x, y, &mappedX, &mappedY);
+
+            diskSamples[i * sampleRoot * 2 + j * 2]     = mappedX;
+            diskSamples[i * sampleRoot * 2 + j * 2 + 1] = mappedY;
+        }
+    }
+
+    cl_mem diskSampleBuf = clCreateBuffer(context, CL_MEM_USE_HOST_PTR|CL_MEM_READ_ONLY,
+            samplesSize, diskSamples, &ret);
+    if (ret) {
+        log_error("Could not create square sample buffer, ret %d", ret);
         exit(1);
     }
 
@@ -330,19 +386,25 @@ int main()
                 exit(1);
             }
 
-            ret = clSetKernelArg(kernel, 6, sizeof(cl_mem), (void *)&sampleBuf);
+            ret = clSetKernelArg(kernel, 6, sizeof(cl_mem), (void *)&squareSampleBuf);
             if (ret) {
                 log_error("Could not set kernel argument, ret %d", ret);
                 exit(1);
             }
 
-            ret = clSetKernelArg(kernel, 7, sizeof(sampleIdx), (void *)&sampleIdx);
+            ret = clSetKernelArg(kernel, 7, sizeof(cl_mem), (void *)&diskSampleBuf);
             if (ret) {
                 log_error("Could not set kernel argument, ret %d", ret);
                 exit(1);
             }
 
-            ret = clSetKernelArg(kernel, 8, sizeof(traceDepth), (void *)&traceDepth);
+            ret = clSetKernelArg(kernel, 8, sizeof(sampleIdx), (void *)&sampleIdx);
+            if (ret) {
+                log_error("Could not set kernel argument, ret %d", ret);
+                exit(1);
+            }
+
+            ret = clSetKernelArg(kernel, 9, sizeof(traceDepth), (void *)&traceDepth);
             if (ret) {
                 log_error("Could not set kernel argument, ret %d", ret);
                 exit(1);

@@ -8,25 +8,36 @@
 #include <t2/scene.cl>
 #include <t2/trace.cl>
 #include <t2/pinhole_camera.cl>
+#include <t2/thinlens_camera.cl>
 
 __kernel void raytracer(
         __read_only image2d_t input,
         __write_only image2d_t output,
         uint width, uint height,
         float3 position, float3 heading,
-        __global float2 *samples, uint sampleIdx,
+        __global float2 *squareSamples,
+        __global float2 *diskSamples,
+        uint sampleIdx,
         uint traceDepth)
 {
     struct Scene s;
     buildscene(&s);
 
-    struct PinholeCamera camera;
+    // struct PinholeCamera camera;
+    // camera.eye = position;
+    // camera.lookat = position + heading;
+    // camera.up = (float3)(0, 1, 0);
+    // camera.vpdist = 500;
+    // pinhole_camera_compute_uvw(&camera);
 
+    struct ThinLensCamera camera;
     camera.eye = position;
     camera.lookat = position + heading;
     camera.up = (float3)(0, 1, 0);
-    camera.vpdist = 500;
-    pinhole_camera_compute_uvw(&camera);
+    camera.vpdist = 3;
+    camera.fpdist = 4;
+    camera.lens_radius = 0.09;
+    thinlens_camera_compute_uvw(&camera);
 
     int2 pos = (int2)(get_global_id(0), get_global_id(1));
     float4 origCVal = (float4)(0.f);
@@ -35,9 +46,10 @@ __kernel void raytracer(
         origCVal = read_imagef(input, pos);
     }
 
-    float2 sample = samples[sampleIdx];
-    float2 newPos = (float2)(pos.x + sample.x, pos.y + sample.y);
-    float4 newCVal = pinhole_camera_render(&camera, &s, width, height, traceDepth, newPos);
+    float2 squareSample = squareSamples[sampleIdx];
+    float2 diskSample = diskSamples[sampleIdx];
+    // float4 newCVal = pinhole_camera_render(&camera, &s, width, height, traceDepth, pos, squareSample);
+    float4 newCVal = thinlens_camera_render(&camera, &s, width, height, traceDepth, pos, squareSample, diskSample);
 
     if (sampleIdx > 0) {
         newCVal = (origCVal * sampleIdx + newCVal) / (sampleIdx + 1);
