@@ -22,7 +22,7 @@
 int global_log_level = LOG_DEBUG;
 
 // Position vector
-cl_float position[3] = { 2.5, 1.0, -5.0 };
+cl_float position[3] = { 0, 1.0, -5.0 };
 
 // Heading vector
 cl_float heading[3] = { 0.0, 0.0, 1.0 };

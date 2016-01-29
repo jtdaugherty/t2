@@ -3,7 +3,7 @@
 #define T2_TYPES_CL
 
 #define MAX_PLANES 10
-#define MAX_SPHERES 10
+#define MAX_SPHERES 20
 #define MAX_LIGHTS 10
 #define MAX_MATERIALS 10
 

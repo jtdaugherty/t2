@@ -3,38 +3,87 @@
 
 static void buildscene(struct Scene *s)
 {
-    s->spheres[0].center = (float3)(0, 1, -4);
-    s->spheres[0].radius = 1;
-    s->spheres[0].material = 3;
+    s->numSpheres = 0;
 
-    s->spheres[1].center = (float3)(0, 1, -2);
-    s->spheres[1].radius = 1;
-    s->spheres[1].material = 1;
+    s->spheres[s->numSpheres].center = (float3)(2, 1, -4);
+    s->spheres[s->numSpheres].radius = 1;
+    s->spheres[s->numSpheres].material = 3;
+    s->numSpheres++;
 
-    s->spheres[2].center = (float3)(0, 1, 0);
-    s->spheres[2].radius = 1;
-    s->spheres[2].material = 3;
+    s->spheres[s->numSpheres].center = (float3)(2, 1, -2);
+    s->spheres[s->numSpheres].radius = 1;
+    s->spheres[s->numSpheres].material = 1;
+    s->numSpheres++;
 
-    s->spheres[3].center = (float3)(0, 1, 2);
-    s->spheres[3].radius = 1;
-    s->spheres[3].material = 1;
+    s->spheres[s->numSpheres].center = (float3)(2, 1, 0);
+    s->spheres[s->numSpheres].radius = 1;
+    s->spheres[s->numSpheres].material = 3;
+    s->numSpheres++;
 
-    s->spheres[4].center = (float3)(0, 1, 4);
-    s->spheres[4].radius = 1;
-    s->spheres[4].material = 3;
+    s->spheres[s->numSpheres].center = (float3)(2, 1, 2);
+    s->spheres[s->numSpheres].radius = 1;
+    s->spheres[s->numSpheres].material = 1;
+    s->numSpheres++;
 
-    s->spheres[5].center = (float3)(0, 1, 6);
-    s->spheres[5].radius = 1;
-    s->spheres[5].material = 1;
+    s->spheres[s->numSpheres].center = (float3)(2, 1, 4);
+    s->spheres[s->numSpheres].radius = 1;
+    s->spheres[s->numSpheres].material = 3;
+    s->numSpheres++;
 
-    s->spheres[6].center = (float3)(0, 1, 8);
-    s->spheres[6].radius = 1;
-    s->spheres[6].material = 3;
+    s->spheres[s->numSpheres].center = (float3)(2, 1, 6);
+    s->spheres[s->numSpheres].radius = 1;
+    s->spheres[s->numSpheres].material = 1;
+    s->numSpheres++;
 
-    s->spheres[7].center = (float3)(0, 1, 10);
-    s->spheres[7].radius = 1;
-    s->spheres[7].material = 1;
-    s->numSpheres = 8;
+    s->spheres[s->numSpheres].center = (float3)(2, 1, 8);
+    s->spheres[s->numSpheres].radius = 1;
+    s->spheres[s->numSpheres].material = 3;
+    s->numSpheres++;
+
+    s->spheres[s->numSpheres].center = (float3)(2, 1, 10);
+    s->spheres[s->numSpheres].radius = 1;
+    s->spheres[s->numSpheres].material = 1;
+    s->numSpheres++;
+
+    s->spheres[s->numSpheres].center = (float3)(-2, 1, -4);
+    s->spheres[s->numSpheres].radius = 1;
+    s->spheres[s->numSpheres].material = 3;
+    s->numSpheres++;
+
+    s->spheres[s->numSpheres].center = (float3)(-2, 1, -2);
+    s->spheres[s->numSpheres].radius = 1;
+    s->spheres[s->numSpheres].material = 1;
+    s->numSpheres++;
+
+    s->spheres[s->numSpheres].center = (float3)(-2, 1, 0);
+    s->spheres[s->numSpheres].radius = 1;
+    s->spheres[s->numSpheres].material = 3;
+    s->numSpheres++;
+
+    s->spheres[s->numSpheres].center = (float3)(-2, 1, 2);
+    s->spheres[s->numSpheres].radius = 1;
+    s->spheres[s->numSpheres].material = 1;
+    s->numSpheres++;
+
+    s->spheres[s->numSpheres].center = (float3)(-2, 1, 4);
+    s->spheres[s->numSpheres].radius = 1;
+    s->spheres[s->numSpheres].material = 3;
+    s->numSpheres++;
+
+    s->spheres[s->numSpheres].center = (float3)(-2, 1, 6);
+    s->spheres[s->numSpheres].radius = 1;
+    s->spheres[s->numSpheres].material = 1;
+    s->numSpheres++;
+
+    s->spheres[s->numSpheres].center = (float3)(-2, 1, 8);
+    s->spheres[s->numSpheres].radius = 1;
+    s->spheres[s->numSpheres].material = 3;
+    s->numSpheres++;
+
+    s->spheres[s->numSpheres].center = (float3)(-2, 1, 10);
+    s->spheres[s->numSpheres].radius = 1;
+    s->spheres[s->numSpheres].material = 1;
+    s->numSpheres++;
 
     s->planes[0].normal = (float3)(0, 1, 0);
     s->planes[0].origin = (float3)(0, 0, 0);
