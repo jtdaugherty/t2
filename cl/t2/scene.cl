@@ -18,7 +18,15 @@ static void buildscene(struct Scene *s)
     s->spheres[3].center = (float3)(0, 1, 6);
     s->spheres[3].radius = 1;
     s->spheres[3].material = 3;
-    s->numSpheres = 4;
+
+    s->spheres[4].center = (float3)(0, 1, 8);
+    s->spheres[4].radius = 1;
+    s->spheres[4].material = 3;
+
+    s->spheres[5].center = (float3)(0, 1, 10);
+    s->spheres[5].radius = 1;
+    s->spheres[5].material = 3;
+    s->numSpheres = 6;
 
     s->planes[0].normal = (float3)(0, 1, 0);
     s->planes[0].origin = (float3)(0, 0, 0);
