@@ -1,13 +1,8 @@
 
 #include <GL/glew.h>
-
 #include <OpenGL/gl.h>
 #include <GLFW/glfw3.h>
-
 #include <math.h>
-#include <sys/stat.h>
-#include <string.h>
-#include <stdlib.h>
 
 #include <t2/version.h>
 #include <t2/logging.h>
@@ -18,6 +13,7 @@
 #include <t2/opencl_setup.h>
 #include <t2/shader_setup.h>
 #include <t2/texture.h>
+#include <t2/samplers.h>
 
 #define MAXF(a, b) ((a) > (b) ? (a) : (b))
  
@@ -38,12 +34,6 @@ cl_uint traceDepth = 5;
 
 double cursorX;
 double cursorY;
-
-float randFloat()
-{
-    return ((float)(arc4random() % ((unsigned)RAND_MAX + 1))) /
-        ((float)((unsigned)RAND_MAX + 1));
-}
 
 void normalize(cl_float *vec)
 {
@@ -181,73 +171,6 @@ void copyTexture(GLuint fbo, GLuint texSrc, GLuint texDst,
     glBlitFramebuffer(0, 0, width, height, 0, 0, width, height,
             GL_COLOR_BUFFER_BIT, GL_NEAREST);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-}
-
-void mapToUnitDisk(float *x, float *y)
-{
-    float spX, spY, phi, r;
-
-    spX = 2.0 * (*x) - 1.0;
-    spY = 2.0 * (*y) - 1.0;
-
-    if (spX > -spY) {
-        if (spX > spY) {
-            r = spX;
-            phi = spY / spX;
-        } else {
-            r = spY;
-            phi = 2.0 - spX / spY;
-        }
-    } else {
-        if (spX < spY) {
-            r = -spX;
-            phi = 4 + spY / spX;
-        } else {
-            r = -spY;
-            if (spY != 0.0) {
-                phi = 6.0 - spX / spY;
-            } else {
-                phi = 0.0;
-            }
-        }
-    }
-
-    phi *= M_PI / 4.0;
-    *x = r * cos(phi);
-    *y = r * sin(phi);
-}
-
-void generateRandomSampleSet(float *samples, int sampleRoot, void(*map)(float*, float*))
-{
-    for (int i = 0; i < sampleRoot; i++) {
-        for (int j = 0; j < sampleRoot; j++) {
-            float x = randFloat();
-            float y = randFloat();
-
-            if (map)
-                map(&x, &y);
-
-            samples[i * sampleRoot * 2 + j * 2]     = x;
-            samples[i * sampleRoot * 2 + j * 2 + 1] = y;
-        }
-    }
-}
-
-void generateJitteredSampleSet(float *samples, int sampleRoot, void(*map)(float*, float*))
-{
-    float inc = 1.0 / ((float) sampleRoot);
-    for (int i = 0; i < sampleRoot; i++) {
-        for (int j = 0; j < sampleRoot; j++) {
-            float x = (i * inc) + randFloat() * inc;
-            float y = (j * inc) + randFloat() * inc;
-
-            if (map)
-                map(&x, &y);
-
-            samples[i * sampleRoot * 2 + j * 2]     = x;
-            samples[i * sampleRoot * 2 + j * 2 + 1] = y;
-        }
-    }
 }
 
 int main()
