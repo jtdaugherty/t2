@@ -10,13 +10,12 @@
 #include <t2/platform.h>
 #include <t2/device.h>
 #include <t2/util.h>
+#include <t2/mathutil.h>
 #include <t2/opencl_setup.h>
 #include <t2/shader_setup.h>
 #include <t2/texture.h>
 #include <t2/samplers.h>
 
-#define MAXF(a, b) ((a) > (b) ? (a) : (b))
- 
 int global_log_level = LOG_DEBUG;
 
 // Position vector
@@ -35,18 +34,7 @@ cl_uint traceDepth = 5;
 double cursorX;
 double cursorY;
 
-void normalize(cl_float *vec)
-{
-    cl_float len = sqrt(vec[0] * vec[0] +
-            vec[1] * vec[1] +
-            vec[2] * vec[2]);
-
-    vec[0] /= len;
-    vec[1] /= len;
-    vec[2] /= len;
-}
-
-void rotateHeading(cl_float angle)
+static inline void rotateHeading(cl_float angle)
 {
     heading[0] = cos(angle) * heading[0] - sin(angle) * heading[2];
     heading[2] = sin(angle) * heading[0] + cos(angle) * heading[2];
@@ -151,11 +139,11 @@ static void key_callback(GLFWwindow* window, int key, int scancode,
         headingZ = -1 * vel * heading[0];
     }
 
-    if (headingX != 0 || headingZ != 0)
+    if (headingX != 0 || headingZ != 0) {
         sampleIdx = 0;
-
-    position[0] += headingX;
-    position[2] += headingZ;
+        position[0] += headingX;
+        position[2] += headingZ;
+    }
 }
 
 void logVersionInfo()
