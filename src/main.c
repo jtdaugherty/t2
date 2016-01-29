@@ -174,7 +174,7 @@ int main()
     cl_kernel kernel = NULL;
     cl_int ret = -1;
     int width, height;
-    resources res;
+    glResources res;
 
     log_info("t2 version %s (commit %s)", T2_VERSION, T2_COMMIT);
 
@@ -251,15 +251,15 @@ int main()
     ret = shader_setup(&res);
 
     /* Create rendering texture buffers */
-    GLuint textureRead = make_texture(width, height);
-    cl_mem texmemRead = clCreateFromGLTexture(context, CL_MEM_READ_WRITE, GL_TEXTURE_2D, 0, textureRead, &ret);
+    res.readTexture = make_texture(width, height);
+    cl_mem texmemRead = clCreateFromGLTexture(context, CL_MEM_READ_WRITE, GL_TEXTURE_2D, 0, res.readTexture, &ret);
     if (ret) {
         log_error("Could not create shared OpenCL/OpenGL texture 1, ret %d", ret);
         exit(1);
     }
 
-    GLuint textureWrite = make_texture(width, height);
-    cl_mem texmemWrite = clCreateFromGLTexture(context, CL_MEM_READ_WRITE, GL_TEXTURE_2D, 0, textureWrite, &ret);
+    res.writeTexture = make_texture(width, height);
+    cl_mem texmemWrite = clCreateFromGLTexture(context, CL_MEM_READ_WRITE, GL_TEXTURE_2D, 0, res.writeTexture, &ret);
     if (ret) {
         log_error("Could not create shared OpenCL/OpenGL texture 2, ret %d", ret);
         exit(1);
@@ -312,8 +312,7 @@ int main()
     cl_uint maxSamples = sampleRoot * sampleRoot;
 
     glfwSwapInterval(1);
-    GLuint fbo;
-    glGenFramebuffers(1, &fbo);
+    glGenFramebuffers(1, &res.fbo);
 
     log_info("Ready.");
 
@@ -328,7 +327,7 @@ int main()
                support read-write images, we have to have two: one to
                read, one to write, and some code to copy between them at
                the right time (now). */
-            copyTexture(fbo, textureWrite, textureRead, width, height);
+            copyTexture(res.fbo, res.writeTexture, res.readTexture, width, height);
 
             /* Set OpenCL Kernel Parameters */
             ret = 0;
@@ -394,7 +393,7 @@ int main()
             glUseProgram(res.shader_program);
 
             glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, textureWrite);
+            glBindTexture(GL_TEXTURE_2D, res.writeTexture);
             glUniform1i(res.texture_uniform, 0);
 
             glBindBuffer(GL_ARRAY_BUFFER, res.vertex_buffer);

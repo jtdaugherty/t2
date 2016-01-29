@@ -11,8 +11,12 @@ typedef struct {
 
     GLint position_attribute;
     GLint texture_uniform;
-} resources;
 
-GLuint shader_setup(resources *res);
+    GLuint readTexture;
+    GLuint writeTexture;
+    GLuint fbo;
+} glResources;
+
+GLuint shader_setup(glResources *res);
 
 #endif

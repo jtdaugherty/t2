@@ -101,7 +101,7 @@ static GLuint make_buffer(GLenum target, const void *buffer_data, GLsizei buffer
     return buffer;
 }
 
-GLuint shader_setup(resources *res)
+GLuint shader_setup(glResources *res)
 {
     GLuint vertex_shader, fragment_shader;
 
