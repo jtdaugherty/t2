@@ -162,12 +162,12 @@ void copyTexture(GLuint fbo, GLuint texSrc, GLuint texDst,
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void mapToUnitDisk(float x, float y, float *mappedX, float *mappedY)
+void mapToUnitDisk(float *x, float *y)
 {
     float spX, spY, phi, r;
 
-    spX = 2.0 * x - 1.0;
-    spY = 2.0 * y - 1.0;
+    spX = 2.0 * (*x) - 1.0;
+    spY = 2.0 * (*y) - 1.0;
 
     if (spX > -spY) {
         if (spX > spY) {
@@ -192,8 +192,30 @@ void mapToUnitDisk(float x, float y, float *mappedX, float *mappedY)
     }
 
     phi *= M_PI / 4.0;
-    *mappedX = r * cos(phi);
-    *mappedY = r * sin(phi);
+    *x = r * cos(phi);
+    *y = r * sin(phi);
+}
+
+void generateSampleSet(float *samples, int sampleRoot, void(*map)(float*, float*))
+{
+    float r2 = (float)(sampleRoot * sampleRoot);
+    for (int i = 0; i < sampleRoot; i++) {
+        for (int j = 0; j < sampleRoot; j++) {
+            float a = randFloat();
+            float b = randFloat();
+            float littleI = sampleRoot - 1 - i;
+            float littleJ = sampleRoot - 1 - j;
+
+            float x = ((float)i) / ((float)sampleRoot) + (littleI + a) / r2;
+            float y = ((float)j) / ((float)sampleRoot) + (littleJ + b) / r2;
+
+            if (map)
+                map(&x, &y);
+
+            samples[i * sampleRoot * 2 + j * 2]     = x;
+            samples[i * sampleRoot * 2 + j * 2 + 1] = y;
+        }
+    }
 }
 
 int main()
@@ -302,20 +324,9 @@ int main()
     log_info("Generating %d samples", sampleRoot * sampleRoot);
 
     int samplesSize = sizeof(cl_float) * sampleRoot * sampleRoot * 2;
+
     cl_float *squareSamples = malloc(samplesSize);
-
-    float r2 = (float)(sampleRoot * sampleRoot);
-    for (int i = 0; i < sampleRoot; i++) {
-        for (int j = 0; j < sampleRoot; j++) {
-            float a = randFloat();
-            float b = randFloat();
-            float littleI = sampleRoot - 1 - i;
-            float littleJ = sampleRoot - 1 - j;
-            squareSamples[i * sampleRoot * 2 + j * 2]     = ((float)i) / ((float)sampleRoot) + (littleI + a) / r2;
-            squareSamples[i * sampleRoot * 2 + j * 2 + 1] = ((float)j) / ((float)sampleRoot) + (littleJ + b) / r2;
-        }
-    }
-
+    generateSampleSet(squareSamples, sampleRoot, NULL);
     cl_mem squareSampleBuf = clCreateBuffer(context, CL_MEM_USE_HOST_PTR|CL_MEM_READ_ONLY,
             samplesSize, squareSamples, &ret);
     if (ret) {
@@ -324,24 +335,7 @@ int main()
     }
 
     cl_float *diskSamples = malloc(samplesSize);
-
-    for (int i = 0; i < sampleRoot; i++) {
-        for (int j = 0; j < sampleRoot; j++) {
-            float a = randFloat();
-            float b = randFloat();
-            float littleI = sampleRoot - 1 - i;
-            float littleJ = sampleRoot - 1 - j;
-            float x = ((float)i) / ((float)sampleRoot) + (littleI + a) / r2;
-            float y = ((float)j) / ((float)sampleRoot) + (littleJ + b) / r2;
-            float mappedX, mappedY;
-
-            mapToUnitDisk(x, y, &mappedX, &mappedY);
-
-            diskSamples[i * sampleRoot * 2 + j * 2]     = mappedX;
-            diskSamples[i * sampleRoot * 2 + j * 2 + 1] = mappedY;
-        }
-    }
-
+    generateSampleSet(diskSamples, sampleRoot, mapToUnitDisk);
     cl_mem diskSampleBuf = clCreateBuffer(context, CL_MEM_USE_HOST_PTR|CL_MEM_READ_ONLY,
             samplesSize, diskSamples, &ret);
     if (ret) {
