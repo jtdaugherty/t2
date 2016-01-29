@@ -506,39 +506,39 @@ int main()
 
             snprintf(title, sizeof(title), "t2 [%d/%d samples]", sampleIdx, maxSamples);
             glfwSetWindowTitle(window, title);
+
+            glClear(GL_COLOR_BUFFER_BIT);
+
+            glUseProgram(res.shader_program);
+
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, textureWrite);
+            glUniform1i(res.texture_uniform, 0);
+
+            glBindBuffer(GL_ARRAY_BUFFER, res.vertex_buffer);
+            glVertexAttribPointer(
+                    res.position_attribute,          /* attribute */
+                    2,                                /* size */
+                    GL_FLOAT,                         /* type */
+                    GL_FALSE,                         /* normalized? */
+                    sizeof(GLfloat)*2,                /* stride */
+                    (void*)0                          /* array buffer offset */
+                    );
+            glEnableVertexAttribArray(res.position_attribute);
+
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, res.element_buffer);
+            glDrawElements(
+                    GL_TRIANGLE_STRIP,  /* mode */
+                    4,                  /* count */
+                    GL_UNSIGNED_SHORT,  /* type */
+                    (void*)0            /* element array buffer offset */
+                    );
+
+            glDisableVertexAttribArray(res.position_attribute);
+
+            /* Swap front and back buffers */
+            glfwSwapBuffers(window);
         }
-
-        glClear(GL_COLOR_BUFFER_BIT);
-
-        glUseProgram(res.shader_program);
-
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, textureWrite);
-        glUniform1i(res.texture_uniform, 0);
-
-        glBindBuffer(GL_ARRAY_BUFFER, res.vertex_buffer);
-        glVertexAttribPointer(
-                res.position_attribute,          /* attribute */
-                2,                                /* size */
-                GL_FLOAT,                         /* type */
-                GL_FALSE,                         /* normalized? */
-                sizeof(GLfloat)*2,                /* stride */
-                (void*)0                          /* array buffer offset */
-                );
-        glEnableVertexAttribArray(res.position_attribute);
-
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, res.element_buffer);
-        glDrawElements(
-                GL_TRIANGLE_STRIP,  /* mode */
-                4,                  /* count */
-                GL_UNSIGNED_SHORT,  /* type */
-                (void*)0            /* element array buffer offset */
-                );
-
-        glDisableVertexAttribArray(res.position_attribute);
-
-        /* Swap front and back buffers */
-        glfwSwapBuffers(window);
 
         /* Poll for and process events */
         glfwPollEvents();
