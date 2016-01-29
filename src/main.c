@@ -219,16 +219,8 @@ void mapToUnitDisk(float *x, float *y)
 
 void generateRandomSampleSet(float *samples, int sampleRoot, void(*map)(float*, float*))
 {
-    // float r2 = (float)(sampleRoot * sampleRoot);
     for (int i = 0; i < sampleRoot; i++) {
         for (int j = 0; j < sampleRoot; j++) {
-            // float a = randFloat();
-            // float b = randFloat();
-            // float littleI = sampleRoot - 1 - i;
-            // float littleJ = sampleRoot - 1 - j;
-
-            // float x = ((float)i) / ((float)sampleRoot) + (littleI + a) / r2;
-            // float y = ((float)j) / ((float)sampleRoot) + (littleJ + b) / r2;
             float x = randFloat();
             float y = randFloat();
 
