@@ -140,6 +140,21 @@ static void key_callback(GLFWwindow* window, int key, int scancode,
     position[2] += headingZ;
 }
 
+void copyTexture(GLuint fbo, GLuint texSrc, GLuint texDst,
+        int width, int height)
+{
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+    glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+            GL_TEXTURE_2D, texSrc, 0);
+    glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT1,
+            GL_TEXTURE_2D, texDst, 0);
+    glReadBuffer(GL_COLOR_ATTACHMENT0);
+    glDrawBuffer(GL_COLOR_ATTACHMENT1);
+    glBlitFramebuffer(0, 0, width, height, 0, 0, width, height,
+            GL_COLOR_BUFFER_BIT, GL_NEAREST);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
 int main()
 {
     cl_platform_id platform_id = NULL;
@@ -276,16 +291,7 @@ int main()
     while (!glfwWindowShouldClose(window))
     {
         if (sampleIdx < maxSamples) {
-            glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-            glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, 
-                    GL_TEXTURE_2D, textureWrite, 0);
-            glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, 
-                    GL_TEXTURE_2D, textureRead, 0);
-            glReadBuffer(GL_COLOR_ATTACHMENT0);
-            glDrawBuffer(GL_COLOR_ATTACHMENT1);
-            glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, 
-                    GL_COLOR_BUFFER_BIT, GL_NEAREST);
-            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+            copyTexture(fbo, textureWrite, textureRead, width, height);
 
             /* Set OpenCL Kernel Parameters */
             ret = clSetKernelArg(kernel, 0, sizeof(cl_mem), (void *)&texmemRead);
