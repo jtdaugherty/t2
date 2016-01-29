@@ -1,4 +1,13 @@
-Other:
+- Runtime changes in sample count (w/regeneration of sample values)
+- Optional text overlay showing rendering status
+- Object picking for fun and profit
+- Ambient occlusion
+- Triangle meshes
+- Path tracing w/environment lights (concave spheres)
+- Area lighting
+- Host-side scene description and scene-building with single transfer to
+  GPU rather than per-pixel, per-sample scene-building
 - Command-line argument processing to set
   * log level and destination
   * device preference (e.g. cpu vs gpu)
+  * window dimensions
