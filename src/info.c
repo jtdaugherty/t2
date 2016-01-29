@@ -28,13 +28,23 @@ cl_int logDeviceInfo(cl_device_id device_id) {
 }
 
 cl_int logPlatformInfo(cl_platform_id platform_id) {
+    cl_int ret;
+
     char platform_profile[64];
-    cl_int ret = clGetPlatformInfo(platform_id, CL_PLATFORM_PROFILE, 64, platform_profile, NULL);
+    ret = clGetPlatformInfo(platform_id, CL_PLATFORM_PROFILE, 64, platform_profile, NULL);
     if (ret) {
         log_error("Failed to get platform profile, ret %d", ret);
         return ret;
     }
 
+    char platform_version[64];
+    ret = clGetPlatformInfo(platform_id, CL_PLATFORM_VERSION, 64, platform_version, NULL);
+    if (ret) {
+        log_error("Failed to get platform version, ret %d", ret);
+        return ret;
+    }
+
     log_info("Platform profile: %s", platform_profile);
+    log_info("Platform version: %s", platform_version);
     return 0;
 }
