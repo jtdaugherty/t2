@@ -1,5 +1,9 @@
 CC = gcc
+
+COMMIT = $(shell git log -1 --format="%h")
+
 CFLAGS = \
+		 -DT2_COMMIT=\"$(COMMIT)\" \
 		 -Wall -Iinclude \
 		 $(shell pkg-config --cflags glfw3) \
 		 $(shell pkg-config --cflags glew)

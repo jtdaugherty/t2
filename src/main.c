@@ -8,6 +8,7 @@
 #include <sys/stat.h>
 #include <string.h>
 
+#include <t2/version.h>
 #include <t2/logging.h>
 #include <t2/info.h>
 #include <t2/platform.h>
@@ -148,6 +149,8 @@ int main()
     cl_int ret = -1;
     int width, height;
     resources res;
+
+    log_info("t2 version %s (commit %s)", T2_VERSION, T2_COMMIT);
 
     /* Initialize the library */
     if (!glfwInit())
