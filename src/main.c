@@ -142,7 +142,7 @@ int main()
     glfwWindowHint(GLFW_SRGB_CAPABLE, GL_TRUE);
 
     /* Create a windowed mode window and its OpenGL context */
-    GLFWwindow* window = glfwCreateWindow(640, 480, "t2", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(1024, 768, "t2", NULL, NULL);
     if (!window)
     {
         log_error("Could not create GLFW window");
@@ -218,24 +218,32 @@ int main()
         exit(1);
     }
 
-    cl_float samples[] = {
-        -0.25, -0.25,
-        -0.25, 0.25,
-        0.25, -0.25,
-        0.25, 0.25
-    };
+    int sampleRoot = 4;
+
+    int samplesSize = sizeof(cl_float) * sampleRoot * sampleRoot * 2;
+    cl_float *samples = malloc(samplesSize);
+
+    float inc = 1.0 / (float) (sampleRoot * 2);
+    for (int i = 0; i < sampleRoot; i++) {
+        for (int j = 0; j < sampleRoot; j++) {
+            samples[i * sampleRoot * 2 + j * 2]     = (((float) i) * 2 + 1) * inc;
+            samples[i * sampleRoot * 2 + j * 2 + 1] = (((float) j) * 2 + 1) * inc;
+        }
+    }
 
     cl_mem sampleBuf = clCreateBuffer(context, CL_MEM_USE_HOST_PTR|CL_MEM_READ_ONLY,
-            sizeof(samples), samples, &ret);
+            samplesSize, samples, &ret);
     if (ret) {
         log_error("Could not create sample buffer, ret %d", ret);
         exit(1);
     }
 
-    cl_uint maxSamples = 4;
+    cl_uint maxSamples = sampleRoot * sampleRoot;
 
     GLuint fbo;
     glGenFramebuffers(1, &fbo);
+
+    char title[64];
 
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
@@ -334,8 +342,10 @@ int main()
                 exit(1);
             }
 
-            log_debug("Done rendering sample %d", sampleIdx);
             sampleIdx++;
+
+            snprintf(title, sizeof(title), "t2 [%d/%d samples]", sampleIdx, maxSamples);
+            glfwSetWindowTitle(window, title);
         }
 
         glClear(GL_COLOR_BUFFER_BIT);
