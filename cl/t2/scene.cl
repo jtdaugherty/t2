@@ -3,19 +3,19 @@
 
 static void buildscene(struct Scene *s)
 {
-    s->spheres[0].center = (float3)(1.3, 1, 1.3);
+    s->spheres[0].center = (float3)(0, 1, 0);
     s->spheres[0].radius = 1;
     s->spheres[0].material = 1;
 
-    s->spheres[1].center = (float3)(-1.3, 1, 1.3);
+    s->spheres[1].center = (float3)(0, 1, 2);
     s->spheres[1].radius = 1;
     s->spheres[1].material = 1;
 
-    s->spheres[2].center = (float3)(1.3, 1, -1.3);
+    s->spheres[2].center = (float3)(0, 1, 4);
     s->spheres[2].radius = 1;
     s->spheres[2].material = 3;
 
-    s->spheres[3].center = (float3)(-1.3, 1, -1.3);
+    s->spheres[3].center = (float3)(0, 1, 6);
     s->spheres[3].radius = 1;
     s->spheres[3].material = 3;
     s->numSpheres = 4;
