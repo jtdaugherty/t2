@@ -149,8 +149,12 @@ static void key_callback(GLFWwindow* window, int key, int scancode,
 void logVersionInfo()
 {
     int maj, min, rev;
+
+    log_info("t2 version %s (commit %s)", T2_VERSION, T2_COMMIT);
+
     glfwGetVersion(&maj, &min, &rev);
     log_info("GLFW version: %d.%d.%d", maj, min, rev);
+
     log_info("GLEW version: %s", glewGetString(GLEW_VERSION));
 }
 
@@ -163,8 +167,6 @@ int main()
     cl_int ret = -1;
     int width, height;
     glResources res;
-
-    log_info("t2 version %s (commit %s)", T2_VERSION, T2_COMMIT);
 
     /* Initialize the library */
     if (!glfwInit())
