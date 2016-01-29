@@ -7,6 +7,7 @@
 #include <math.h>
 #include <sys/stat.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include <t2/version.h>
 #include <t2/logging.h>
@@ -32,6 +33,12 @@ cl_uint traceDepth = 5;
 
 double cursorX;
 double cursorY;
+
+float randFloat()
+{
+    return ((float)(arc4random() % ((unsigned)RAND_MAX + 1))) /
+        ((float)((unsigned)RAND_MAX + 1));
+}
 
 void normalize(cl_float *vec)
 {
@@ -297,11 +304,15 @@ int main()
     int samplesSize = sizeof(cl_float) * sampleRoot * sampleRoot * 2;
     cl_float *squareSamples = malloc(samplesSize);
 
-    float inc = 1.0 / (float) (sampleRoot * 2);
+    float r2 = (float)(sampleRoot * sampleRoot);
     for (int i = 0; i < sampleRoot; i++) {
         for (int j = 0; j < sampleRoot; j++) {
-            squareSamples[i * sampleRoot * 2 + j * 2]     = (((float) i) * 2 + 1) * inc;
-            squareSamples[i * sampleRoot * 2 + j * 2 + 1] = (((float) j) * 2 + 1) * inc;
+            float a = randFloat();
+            float b = randFloat();
+            float littleI = sampleRoot - 1 - i;
+            float littleJ = sampleRoot - 1 - j;
+            squareSamples[i * sampleRoot * 2 + j * 2]     = ((float)i) / ((float)sampleRoot) + (littleI + a) / r2;
+            squareSamples[i * sampleRoot * 2 + j * 2 + 1] = ((float)j) / ((float)sampleRoot) + (littleJ + b) / r2;
         }
     }
 
@@ -316,8 +327,12 @@ int main()
 
     for (int i = 0; i < sampleRoot; i++) {
         for (int j = 0; j < sampleRoot; j++) {
-            float x = (((float) i) * 2 + 1) * inc;
-            float y = (((float) j) * 2 + 1) * inc;
+            float a = randFloat();
+            float b = randFloat();
+            float littleI = sampleRoot - 1 - i;
+            float littleJ = sampleRoot - 1 - j;
+            float x = ((float)i) / ((float)sampleRoot) + (littleI + a) / r2;
+            float y = ((float)j) / ((float)sampleRoot) + (littleJ + b) / r2;
             float mappedX, mappedY;
 
             mapToUnitDisk(x, y, &mappedX, &mappedY);
