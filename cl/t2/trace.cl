@@ -1,5 +1,5 @@
 
-#define TRACE_DEPTH 10
+#define TRACE_DEPTH 5
 
 static float3 reflect(float3 A, float3 B)
 {
