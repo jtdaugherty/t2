@@ -27,6 +27,8 @@ cl_float heading[3] = { 0.0, 0.0, 1.0 };
 
 cl_uint sampleIdx = 0;
 
+cl_uint traceDepth = 5;
+
 double cursorX;
 double cursorY;
 
@@ -83,13 +85,26 @@ static void key_callback(GLFWwindow* window, int key, int scancode,
 {
 #define PRESS(KEY) (key == KEY && (action == GLFW_PRESS || action == GLFW_REPEAT))
 #define QUIT_KEY (PRESS(GLFW_KEY_ESCAPE) || PRESS(GLFW_KEY_Q))
+#define SHIFT (mods & GLFW_MOD_SHIFT)
 #define A_KEY (PRESS(GLFW_KEY_A))
 #define D_KEY (PRESS(GLFW_KEY_D))
 #define W_KEY (PRESS(GLFW_KEY_W))
 #define S_KEY (PRESS(GLFW_KEY_S))
+#define MINUS_KEY (PRESS(GLFW_KEY_MINUS))
+#define PLUS_KEY (PRESS(GLFW_KEY_EQUAL) && SHIFT)
 
     if (QUIT_KEY)
         glfwSetWindowShouldClose(window, GL_TRUE);
+
+    if (MINUS_KEY) {
+        sampleIdx = 0;
+        traceDepth = traceDepth == 1 ? 1 : traceDepth - 1;
+    }
+
+    if (PLUS_KEY) {
+        sampleIdx = 0;
+        traceDepth++;
+    }
 
     // Movement keys translate the position vector based on the heading
     float vel = 0.2;
@@ -312,6 +327,12 @@ int main()
             }
 
             ret = clSetKernelArg(kernel, 7, sizeof(sampleIdx), (void *)&sampleIdx);
+            if (ret) {
+                log_error("Could not set kernel argument, ret %d", ret);
+                exit(1);
+            }
+
+            ret = clSetKernelArg(kernel, 8, sizeof(traceDepth), (void *)&traceDepth);
             if (ret) {
                 log_error("Could not set kernel argument, ret %d", ret);
                 exit(1);

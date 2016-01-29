@@ -1,6 +1,4 @@
 
-#define TRACE_DEPTH 5
-
 static float3 reflect(float3 A, float3 B)
 {
     return B - ((float3)2) * (float3)dot(A, B) * A;
@@ -65,11 +63,11 @@ static float shadowray(struct Scene *s, float3 L, float3 P)
     return findintersection(s, &light, 0) ? 0.f : 1.f;
 }
 
-static float4 raytrace(struct Scene *s, struct RayStack *stack, struct Ray *r, int depth)
+static float4 raytrace(struct Scene *s, struct RayStack *stack, uint traceDepth, struct Ray *r, uint depth)
 {
     float4 color = (float4)(0, 0, 0, 0);
 
-    if(depth > TRACE_DEPTH) return color;
+    if(depth > traceDepth) return color;
 
     struct IntersectionResult intersection;
     int result = findintersection(s, r, &intersection);
@@ -111,7 +109,7 @@ static float4 raytrace(struct Scene *s, struct RayStack *stack, struct Ray *r, i
     return color;
 }
 
-static float4 recursivetrace(struct Scene *s, struct Ray *r)
+static float4 recursivetrace(struct Scene *s, uint traceDepth, struct Ray *r)
 {
     struct RayStack stack;
     stack.top = 0;
@@ -122,7 +120,7 @@ static float4 recursivetrace(struct Scene *s, struct Ray *r)
     while(stack.top > 0)
     {
         stack.top--;
-        c += raytrace(s, &stack, &stack.r[stack.top], stack.depth[stack.top]);
+        c += raytrace(s, &stack, traceDepth, &stack.r[stack.top], stack.depth[stack.top]);
     }
 
     return c;

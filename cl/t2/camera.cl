@@ -15,7 +15,7 @@ static float3 camera_ray_direction(struct Camera *camera, float2 point)
                      (camera->vpdist * camera->w));
 }
 
-static float4 camera_render(struct Camera *camera, struct Scene *scene, int width, int height, float2 coord)
+static float4 camera_render(struct Camera *camera, struct Scene *scene, int width, int height, uint traceDepth, float2 coord)
 {
     float2 pp = (float2)(coord.x - (width / 2.f),
                          coord.y - (height / 2.f));
@@ -24,5 +24,5 @@ static float4 camera_render(struct Camera *camera, struct Scene *scene, int widt
     r.origin = camera->eye;
     r.dir = camera_ray_direction(camera, pp);
 
-    return recursivetrace(scene, &r);
+    return recursivetrace(scene, traceDepth, &r);
 }

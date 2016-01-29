@@ -14,7 +14,8 @@ __kernel void raytracer(
         __write_only image2d_t output,
         uint width, uint height,
         float3 position, float3 heading,
-        __global float2 *samples, uint sampleIdx)
+        __global float2 *samples, uint sampleIdx,
+        uint traceDepth)
 {
     struct Scene s;
     buildscene(&s);
@@ -36,7 +37,7 @@ __kernel void raytracer(
 
     float2 sample = samples[sampleIdx];
     float2 newPos = (float2)(pos.x + sample.x, pos.y + sample.y);
-    float4 newCVal = camera_render(&camera, &s, width, height, newPos);
+    float4 newCVal = camera_render(&camera, &s, width, height, traceDepth, newPos);
 
     if (sampleIdx > 0) {
         newCVal = (origCVal * sampleIdx + newCVal) / (sampleIdx + 1);
