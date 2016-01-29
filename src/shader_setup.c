@@ -7,6 +7,8 @@
 #include <t2/logging.h>
 #include <t2/shader_setup.h>
 
+#define MAX_SHADER_SIZE 0x100000
+
 static void show_info_log(GLuint object,
     PFNGLGETSHADERIVPROC glGet__iv,
     PFNGLGETSHADERINFOLOGPROC glGet__InfoLog)
@@ -36,8 +38,8 @@ static GLuint make_shader(GLenum type, const char *filename)
         exit(1);
     }
 
-    if (st.st_size > 0x100000) {
-        log_error("File size %lld exceeds allowed size %d for file %s", st.st_size, 0x100000, filename);
+    if (st.st_size > MAX_SHADER_SIZE) {
+        log_error("File size %lld exceeds allowed size %d for file %s", st.st_size, MAX_SHADER_SIZE, filename);
         exit(1);
     }
 
