@@ -321,19 +321,19 @@ int main()
 
             /* Set OpenCL Kernel Parameters */
             ret = 0;
-            ret |= clSetKernelArg(kernel, 0, sizeof(cl_mem), (void *)&texmemRead);
-            ret |= clSetKernelArg(kernel, 1, sizeof(cl_mem), (void *)&texmemWrite);
-            ret |= clSetKernelArg(kernel, 2, sizeof(width), (void *)&width);
-            ret |= clSetKernelArg(kernel, 3, sizeof(height), (void *)&height);
-            ret |= clSetKernelArg(kernel, 4, sizeof(position), (void *)position);
-            ret |= clSetKernelArg(kernel, 5, sizeof(heading), (void *)heading);
-            ret |= clSetKernelArg(kernel, 6, sizeof(lens_radius), (void *)&lens_radius);
-            ret |= clSetKernelArg(kernel, 7, sizeof(cl_mem), (void *)&squareSampleBuf);
-            ret |= clSetKernelArg(kernel, 8, sizeof(cl_mem), (void *)&diskSampleBuf);
-            ret |= clSetKernelArg(kernel, 9, sizeof(cl_int), (void *)&numSampleSets);
-            ret |= clSetKernelArg(kernel, 10, sizeof(cl_int), (void *)&sampleRoot);
-            ret |= clSetKernelArg(kernel, 11, sizeof(sampleIdx), (void *)&sampleIdx);
-            ret |= clSetKernelArg(kernel, 12, sizeof(traceDepth), (void *)&traceDepth);
+            ret |= clSetKernelArg(kernel, 0,    sizeof(cl_mem),      &texmemRead);
+            ret |= clSetKernelArg(kernel, 1,    sizeof(cl_mem),      &texmemWrite);
+            ret |= clSetKernelArg(kernel, 2,    sizeof(width),       &width);
+            ret |= clSetKernelArg(kernel, 3,    sizeof(height),      &height);
+            ret |= clSetKernelArg(kernel, 4,    sizeof(position),    position);
+            ret |= clSetKernelArg(kernel, 5,    sizeof(heading),     heading);
+            ret |= clSetKernelArg(kernel, 6,    sizeof(lens_radius), &lens_radius);
+            ret |= clSetKernelArg(kernel, 7,    sizeof(cl_mem),      &squareSampleBuf);
+            ret |= clSetKernelArg(kernel, 8,    sizeof(cl_mem),      &diskSampleBuf);
+            ret |= clSetKernelArg(kernel, 9,    sizeof(cl_int),      &numSampleSets);
+            ret |= clSetKernelArg(kernel, 10,   sizeof(cl_int),      &sampleRoot);
+            ret |= clSetKernelArg(kernel, 11,   sizeof(sampleIdx),   &sampleIdx);
+            ret |= clSetKernelArg(kernel, 12,   sizeof(traceDepth),  &traceDepth);
 
             if (ret) {
                 log_error("Could not set kernel argument, ret %d", ret);
