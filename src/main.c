@@ -3,6 +3,7 @@
 #include <OpenGL/gl.h>
 #include <GLFW/glfw3.h>
 #include <math.h>
+#include <sys/time.h>
 
 #include <t2/version.h>
 #include <t2/logging.h>
@@ -60,6 +61,26 @@ static double cursorY;
 static inline void restartRendering()
 {
     programState.sampleIdx = 0;
+}
+
+void timevalDiff(struct timeval *start,
+                 struct timeval *stop,
+                 struct timeval *diff)
+{
+    if (stop->tv_sec == start->tv_sec + 1)
+        diff->tv_sec = 0;
+    else
+        diff->tv_sec = stop->tv_sec - start->tv_sec;
+
+    if (stop->tv_sec == start->tv_sec)
+        diff->tv_usec = stop->tv_usec - start->tv_usec;
+    else
+        diff->tv_usec = stop->tv_usec + (1000000L - start->tv_usec);
+
+    if (diff->tv_usec > 1000000L) {
+        diff->tv_usec -= 1000000L;
+        diff->tv_sec += 1;
+    }
 }
 
 static inline void rotateHeading(cl_float angle)
@@ -368,9 +389,14 @@ int main(int argc, char **argv)
         sampleIndices[i] = i;
     shuffle(sampleIndices, maxSamples);
 
+    struct timeval start;
+
     while (!glfwWindowShouldClose(window))
     {
         if (programState.sampleIdx < maxSamples) {
+            if (programState.sampleIdx == 0)
+                gettimeofday(&start, NULL);
+
             /* Before we begin collecting a new sample, copy the old
                write buffer to the read buffer. This is critical because
                the kernel reads the image data and averages new sample
@@ -446,6 +472,15 @@ int main(int argc, char **argv)
             }
 
             programState.sampleIdx++;
+
+            if (programState.sampleIdx == maxSamples) {
+                struct timeval stop;
+                gettimeofday(&stop, NULL);
+                struct timeval diff;
+                timevalDiff(&start, &stop, &diff);
+                float secs = ((float)diff.tv_sec) + ((float) diff.tv_usec / 1000000.0);
+                log_info("Frame time: %f sec", secs);
+            }
 
             snprintf(title, sizeof(title), "t2 [%d/%d samples]", programState.sampleIdx,
                     maxSamples);
