@@ -389,13 +389,13 @@ int main(int argc, char **argv)
             ret |= clSetKernelArg(kernel, 0,    sizeof(cl_mem),      &configBuf);
             ret |= clSetKernelArg(kernel, 1,    sizeof(cl_mem),      &texmemRead);
             ret |= clSetKernelArg(kernel, 2,    sizeof(cl_mem),      &texmemWrite);
-            ret |= clSetKernelArg(kernel, 3,    sizeof(programState.position),    programState.position);
-            ret |= clSetKernelArg(kernel, 4,    sizeof(programState.heading),     programState.heading);
-            ret |= clSetKernelArg(kernel, 5,    sizeof(programState.lens_radius), &programState.lens_radius);
-            ret |= clSetKernelArg(kernel, 6,    sizeof(cl_mem),      &squareSampleBuf);
-            ret |= clSetKernelArg(kernel, 7,    sizeof(cl_mem),      &diskSampleBuf);
+            ret |= clSetKernelArg(kernel, 3,    sizeof(cl_mem),      &squareSampleBuf);
+            ret |= clSetKernelArg(kernel, 4,    sizeof(cl_mem),      &diskSampleBuf);
+            ret |= clSetKernelArg(kernel, 5,    sizeof(programState.position),    programState.position);
+            ret |= clSetKernelArg(kernel, 6,    sizeof(programState.heading),     programState.heading);
+            ret |= clSetKernelArg(kernel, 7,    sizeof(programState.lens_radius), &programState.lens_radius);
             ret |= clSetKernelArg(kernel, 8,    sizeof(cl_int),      &numSampleSets);
-            ret |= clSetKernelArg(kernel, 9,   sizeof(thisSampleIdx),   &thisSampleIdx);
+            ret |= clSetKernelArg(kernel, 9,    sizeof(thisSampleIdx),   &thisSampleIdx);
             ret |= clSetKernelArg(kernel, 10,   sizeof(programState.sampleIdx),   &programState.sampleIdx);
 
             if (ret) {

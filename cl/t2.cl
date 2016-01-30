@@ -23,10 +23,10 @@ __kernel void raytracer(
         __global struct configuration *config,
         __read_only image2d_t input,
         __write_only image2d_t output,
-        float3 position, float3 heading,
-        float lens_radius,
         __global float2 *squareSampleSets,
         __global float2 *diskSampleSets,
+        float3 position, float3 heading,
+        float lens_radius,
         int numSampleSets,
         uint sampleIdx,
         uint sampleNum)
