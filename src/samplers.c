@@ -6,8 +6,8 @@
 
 float randFloat()
 {
-    return ((float)(arc4random() % ((unsigned)RAND_MAX + 1))) /
-        ((float)((unsigned)RAND_MAX + 1));
+    u_int32_t upper_bound = 0xffffffff;
+    return ((float)arc4random_uniform(upper_bound))/((float)upper_bound);
 }
 
 void mapToUnitDisk(float *x, float *y)
