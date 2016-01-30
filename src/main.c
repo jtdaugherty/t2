@@ -199,7 +199,6 @@ int main()
     cl_program program = NULL;
     cl_kernel kernel = NULL;
     cl_int ret = -1;
-    int width, height;
     glResources res;
 
     /* Initialize the library */
@@ -234,7 +233,6 @@ int main()
     glfwSetKeyCallback(window, key_callback);
     glfwSetMouseButtonCallback(window, mouse_button_callback);
     glfwSetCursorPosCallback(window, cursor_position_callback);
-    glfwGetWindowSize(window, &width, &height);
 
     /* Make the window's context current */
     glfwMakeContextCurrent(window);
@@ -275,21 +273,21 @@ int main()
     ret = shader_setup(&res);
 
     /* Create rendering texture buffers */
-    res.readTexture = make_texture(width, height);
+    res.readTexture = make_texture(config.width, config.height);
     cl_mem texmemRead = clCreateFromGLTexture(context, CL_MEM_READ_WRITE, GL_TEXTURE_2D, 0, res.readTexture, &ret);
     if (ret) {
         log_error("Could not create shared OpenCL/OpenGL texture 1, ret %d", ret);
         exit(1);
     }
 
-    res.writeTexture = make_texture(width, height);
+    res.writeTexture = make_texture(config.width, config.height);
     cl_mem texmemWrite = clCreateFromGLTexture(context, CL_MEM_READ_WRITE, GL_TEXTURE_2D, 0, res.writeTexture, &ret);
     if (ret) {
         log_error("Could not create shared OpenCL/OpenGL texture 2, ret %d", ret);
         exit(1);
     }
 
-    int numSampleSets = width * 10;
+    int numSampleSets = config.width * 10;
     int samplesSize = sizeof(cl_float) * config.sampleRoot * config.sampleRoot * 2 * numSampleSets;
 
     log_info("Generating %d samples per pixel", config.sampleRoot * config.sampleRoot);
@@ -349,14 +347,14 @@ int main()
                support read-write images, we have to have two: one to
                read, one to write, and some code to copy between them at
                the right time (now). */
-            copyTexture(res.fbo, res.writeTexture, res.readTexture, width, height);
+            copyTexture(res.fbo, res.writeTexture, res.readTexture, config.width, config.height);
 
             /* Set OpenCL Kernel Parameters */
             ret = 0;
             ret |= clSetKernelArg(kernel, 0,    sizeof(cl_mem),      &texmemRead);
             ret |= clSetKernelArg(kernel, 1,    sizeof(cl_mem),      &texmemWrite);
-            ret |= clSetKernelArg(kernel, 2,    sizeof(width),       &width);
-            ret |= clSetKernelArg(kernel, 3,    sizeof(height),      &height);
+            ret |= clSetKernelArg(kernel, 2,    sizeof(config.width),       &config.width);
+            ret |= clSetKernelArg(kernel, 3,    sizeof(config.height),      &config.height);
             ret |= clSetKernelArg(kernel, 4,    sizeof(programState.position),    programState.position);
             ret |= clSetKernelArg(kernel, 5,    sizeof(programState.heading),     programState.heading);
             ret |= clSetKernelArg(kernel, 6,    sizeof(programState.lens_radius), &programState.lens_radius);
@@ -385,7 +383,7 @@ int main()
             }
 
             /* Execute OpenCL Kernel */
-            size_t global_work_size[2] = { width, height };
+            size_t global_work_size[2] = { config.width, config.height };
             ret = clEnqueueNDRangeKernel(command_queue, kernel, 2, NULL, global_work_size, NULL, 0, NULL, NULL);
             if (ret) {
                 log_error("Could not enqueue task");
