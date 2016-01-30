@@ -16,13 +16,12 @@
 #include <t2/texture.h>
 #include <t2/samplers.h>
 
-int global_log_level = LOG_DEBUG;
-
 struct configuration {
     cl_uint traceDepth;
     int sampleRoot;
     int width;
     int height;
+    int logLevel;
 };
 
 struct state {
@@ -52,8 +51,12 @@ struct configuration config = {
     .traceDepth = 5,
     .sampleRoot = 1,
     .width = 640,
-    .height = 480
+    .height = 480,
+    .logLevel = LOG_DEBUG
 };
+
+/* For logging.h to get access to the global log level */
+int *global_log_level = &config.logLevel;
 
 /* Last known mouse cursor position for computing deltas during mouse
 movement */

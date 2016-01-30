@@ -10,10 +10,10 @@
 #define LOG_INFO     (1 << 2)
 #define LOG_DEBUG    (1 << 3)
 
-extern int global_log_level;
+extern int *global_log_level;
 
 #define do_log(level, level_str, fmt, ...) do { \
-    if (level <= global_log_level) { \
+    if (level <= *global_log_level) { \
         fprintf(stderr, "[" level_str "] "); \
         fprintf(stderr, fmt, ##__VA_ARGS__); \
         fprintf(stderr, "\n"); \
