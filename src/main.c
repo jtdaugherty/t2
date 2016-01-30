@@ -350,6 +350,14 @@ int main(int argc, char **argv)
     glfwSwapInterval(1);
     glGenFramebuffers(1, &res.fbo);
 
+    /* Set up OpenCL buffer reference to configuration */
+    cl_mem configBuf = clCreateBuffer(context, CL_MEM_USE_HOST_PTR|CL_MEM_READ_ONLY,
+            sizeof(struct configuration), &config, &ret);
+    if (ret) {
+        log_error("Could not create configuration buffer, ret %d", ret);
+        exit(1);
+    }
+
     log_info("Ready.");
 
     // Create a sample index indirection layer so we can randomize
@@ -378,23 +386,28 @@ int main(int argc, char **argv)
 
             /* Set OpenCL Kernel Parameters */
             ret = 0;
-            ret |= clSetKernelArg(kernel, 0,    sizeof(cl_mem),      &texmemRead);
-            ret |= clSetKernelArg(kernel, 1,    sizeof(cl_mem),      &texmemWrite);
-            ret |= clSetKernelArg(kernel, 2,    sizeof(config.width),       &config.width);
-            ret |= clSetKernelArg(kernel, 3,    sizeof(config.height),      &config.height);
-            ret |= clSetKernelArg(kernel, 4,    sizeof(programState.position),    programState.position);
-            ret |= clSetKernelArg(kernel, 5,    sizeof(programState.heading),     programState.heading);
-            ret |= clSetKernelArg(kernel, 6,    sizeof(programState.lens_radius), &programState.lens_radius);
-            ret |= clSetKernelArg(kernel, 7,    sizeof(cl_mem),      &squareSampleBuf);
-            ret |= clSetKernelArg(kernel, 8,    sizeof(cl_mem),      &diskSampleBuf);
-            ret |= clSetKernelArg(kernel, 9,    sizeof(cl_int),      &numSampleSets);
-            ret |= clSetKernelArg(kernel, 10,   sizeof(cl_int),      &config.sampleRoot);
-            ret |= clSetKernelArg(kernel, 11,   sizeof(thisSampleIdx),   &thisSampleIdx);
-            ret |= clSetKernelArg(kernel, 12,   sizeof(programState.sampleIdx),   &programState.sampleIdx);
-            ret |= clSetKernelArg(kernel, 13,   sizeof(config.traceDepth),  &config.traceDepth);
+            ret |= clSetKernelArg(kernel, 0,    sizeof(cl_mem),      &configBuf);
+            ret |= clSetKernelArg(kernel, 1,    sizeof(cl_mem),      &texmemRead);
+            ret |= clSetKernelArg(kernel, 2,    sizeof(cl_mem),      &texmemWrite);
+            ret |= clSetKernelArg(kernel, 3,    sizeof(programState.position),    programState.position);
+            ret |= clSetKernelArg(kernel, 4,    sizeof(programState.heading),     programState.heading);
+            ret |= clSetKernelArg(kernel, 5,    sizeof(programState.lens_radius), &programState.lens_radius);
+            ret |= clSetKernelArg(kernel, 6,    sizeof(cl_mem),      &squareSampleBuf);
+            ret |= clSetKernelArg(kernel, 7,    sizeof(cl_mem),      &diskSampleBuf);
+            ret |= clSetKernelArg(kernel, 8,    sizeof(cl_int),      &numSampleSets);
+            ret |= clSetKernelArg(kernel, 9,   sizeof(thisSampleIdx),   &thisSampleIdx);
+            ret |= clSetKernelArg(kernel, 10,   sizeof(programState.sampleIdx),   &programState.sampleIdx);
 
             if (ret) {
                 log_error("Could not set kernel argument, ret %d", ret);
+                exit(1);
+            }
+
+            /* Update the configuration buffer */
+            ret = clEnqueueWriteBuffer(command_queue, configBuf, 1, 0, sizeof(struct configuration),
+                    &config, 0, NULL, NULL);
+            if (ret) {
+                log_error("Could not enqueue config buffer update, ret %d", ret);
                 exit(1);
             }
 

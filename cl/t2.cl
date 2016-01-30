@@ -10,19 +10,26 @@
 #include <t2/pinhole_camera.cl>
 #include <t2/thinlens_camera.cl>
 
+/* This should match the struct in t2/config.h */
+struct configuration {
+    uint traceDepth;
+    int sampleRoot;
+    int width;
+    int height;
+    int _unused_logLevel;
+};
+
 __kernel void raytracer(
+        __global struct configuration *config,
         __read_only image2d_t input,
         __write_only image2d_t output,
-        uint width, uint height,
         float3 position, float3 heading,
         float lens_radius,
         __global float2 *squareSampleSets,
         __global float2 *diskSampleSets,
         int numSampleSets,
-        int sampleRoot,
         uint sampleIdx,
-        uint sampleNum,
-        uint traceDepth)
+        uint sampleNum)
 {
     struct Scene s;
     buildscene(&s);
@@ -51,8 +58,8 @@ __kernel void raytracer(
     }
 
     // Size in float2s
-    int sampleSetSize = sampleRoot * sampleRoot;
-    int sampleSetIndex = ((pos.x * height) + pos.y) % numSampleSets;
+    int sampleSetSize = config->sampleRoot * config->sampleRoot;
+    int sampleSetIndex = ((pos.x * config->height) + pos.y) % numSampleSets;
     int offset = sampleSetIndex * sampleSetSize;
     __global float2 *squareSamples = squareSampleSets + offset;
     __global float2 *diskSamples = diskSampleSets + offset;
@@ -60,7 +67,7 @@ __kernel void raytracer(
     float2 squareSample = squareSamples[sampleIdx];
     float2 diskSample = diskSamples[sampleIdx];
     // float4 newCVal = pinhole_camera_render(&camera, &s, width, height, traceDepth, pos, squareSample);
-    float4 newCVal = thinlens_camera_render(&camera, &s, width, height, traceDepth, pos, squareSample, diskSample);
+    float4 newCVal = thinlens_camera_render(&camera, &s, config->width, config->height, config->traceDepth, pos, squareSample, diskSample);
 
     if (sampleNum > 0) {
         newCVal = (origCVal * sampleNum + newCVal) / (sampleNum + 1);
