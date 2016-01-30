@@ -5,13 +5,13 @@
 static void buildscene(struct Scene *s)
 {
     s->cameraType = CAMERA_THINLENS;
-    s->cameras.thinLensCamera.up = (float3)(0, 1, 0);
-    s->cameras.thinLensCamera.vpdist = 3;
-    s->cameras.thinLensCamera.fpdist = 4;
+    s->cameras.thinLens.up = (float3)(0, 1, 0);
+    s->cameras.thinLens.vpdist = 3;
+    s->cameras.thinLens.fpdist = 4;
 
     // s->cameraType = CAMERA_PINHOLE;
-    // s->cameras.pinholeCamera.up = (float3)(0, 1, 0);
-    // s->cameras.pinholeCamera.vpdist = 3;
+    // s->cameras.pinhole.up = (float3)(0, 1, 0);
+    // s->cameras.pinhole.vpdist = 3;
 
     s->numSpheres = 0;
 

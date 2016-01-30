@@ -82,8 +82,8 @@ struct Scene
     uint numMaterials;
 
     union {
-        struct PinholeCamera pinholeCamera;
-        struct ThinLensCamera thinLensCamera;
+        struct PinholeCamera pinhole;
+        struct ThinLensCamera thinLens;
     } cameras;
 
     enum CameraType cameraType;

@@ -50,19 +50,19 @@ __kernel void raytracer(
 
     // Configure camera and trace ray
     if (s.cameraType == CAMERA_THINLENS) {
-        s.cameras.thinLensCamera.eye = position;
-        s.cameras.thinLensCamera.lookat = position + heading;
-        s.cameras.thinLensCamera.lens_radius = lens_radius;
-        thinlens_camera_compute_uvw(&s.cameras.thinLensCamera);
+        s.cameras.thinLens.eye = position;
+        s.cameras.thinLens.lookat = position + heading;
+        s.cameras.thinLens.lens_radius = lens_radius;
+        thinlens_camera_compute_uvw(&s.cameras.thinLens);
 
-        newCVal = thinlens_camera_render(&s.cameras.thinLensCamera, &s,
+        newCVal = thinlens_camera_render(&s.cameras.thinLens, &s,
                 config, pos, squareSample, diskSample);
     } else if (s.cameraType == CAMERA_PINHOLE) {
-        s.cameras.pinholeCamera.eye = position;
-        s.cameras.pinholeCamera.lookat = position + heading;
-        pinhole_camera_compute_uvw(&s.cameras.pinholeCamera);
+        s.cameras.pinhole.eye = position;
+        s.cameras.pinhole.lookat = position + heading;
+        pinhole_camera_compute_uvw(&s.cameras.pinhole);
 
-        newCVal = pinhole_camera_render(&s.cameras.pinholeCamera, &s,
+        newCVal = pinhole_camera_render(&s.cameras.pinhole, &s,
                 config, pos, squareSample);
     }
 
