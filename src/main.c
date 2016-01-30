@@ -268,6 +268,8 @@ int main(int argc, char **argv)
     cl_device_id device_id = chooseOpenCLDevice(platform_id, context);
     logDeviceInfo(device_id);
 
+    log_info("Loading and building OpenCL kernel");
+
     /* Create a command queue for the device */
     command_queue = clCreateCommandQueue(context, device_id, 0, &ret);
     if (ret) {
@@ -288,6 +290,8 @@ int main(int argc, char **argv)
         log_error("Could not create kernel!\n");
         exit(1);
     }
+
+    log_info("Setting up textures and GLSL shaders");
 
     /* Set up GLSL shaders */
     ret = shader_setup(&res);
