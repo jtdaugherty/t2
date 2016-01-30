@@ -1,8 +1,18 @@
 
 #include <t2/types.cl>
+#include <t2/thinlens_camera.cl>
 
 static void buildscene(struct Scene *s)
 {
+    s->cameraType = CAMERA_THINLENS;
+    s->cameras.thinLensCamera.up = (float3)(0, 1, 0);
+    s->cameras.thinLensCamera.vpdist = 3;
+    s->cameras.thinLensCamera.fpdist = 4;
+
+    // s->cameraType = CAMERA_PINHOLE;
+    // s->cameras.pinholeCamera.up = (float3)(0, 1, 0);
+    // s->cameras.pinholeCamera.vpdist = 3;
+
     s->numSpheres = 0;
 
     s->spheres[s->numSpheres].center = (float3)(2, 1, -4);

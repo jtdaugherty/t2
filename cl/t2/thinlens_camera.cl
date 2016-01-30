@@ -1,5 +1,9 @@
 
+#ifndef T2_THINLENS_CAMERA_CL
+#define T2_THINLENS_CAMERA_CL
+
 #include <t2/types.cl>
+#include <t2/trace.cl>
 
 static void thinlens_camera_compute_uvw(struct ThinLensCamera *camera)
 {
@@ -35,3 +39,5 @@ static float4 thinlens_camera_render(
 
     return recursivetrace(scene, traceDepth, &r);
 }
+
+#endif

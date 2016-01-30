@@ -64,6 +64,11 @@ struct Material
     float4 amb;
 };
 
+enum CameraType {
+    CAMERA_PINHOLE,
+    CAMERA_THINLENS
+};
+
 struct Scene
 {
     struct Plane planes[MAX_PLANES];
@@ -75,6 +80,13 @@ struct Scene
     uint numSpheres;
     uint numLights;
     uint numMaterials;
+
+    union {
+        struct PinholeCamera pinholeCamera;
+        struct ThinLensCamera thinLensCamera;
+    } cameras;
+
+    enum CameraType cameraType;
 };
 
 struct IntersectionResult

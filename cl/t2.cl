@@ -2,11 +2,7 @@
 #include <t2/extensions.cl>
 #include <t2/constants.cl>
 #include <t2/types.cl>
-#include <t2/stack.cl>
-#include <t2/plane.cl>
-#include <t2/sphere.cl>
 #include <t2/scene.cl>
-#include <t2/trace.cl>
 #include <t2/pinhole_camera.cl>
 #include <t2/thinlens_camera.cl>
 
@@ -34,44 +30,52 @@ __kernel void raytracer(
     struct Scene s;
     buildscene(&s);
 
-    // struct PinholeCamera camera;
-    // camera.eye = position;
-    // camera.lookat = position + heading;
-    // camera.up = (float3)(0, 1, 0);
-    // camera.vpdist = 500;
-    // pinhole_camera_compute_uvw(&camera);
-
-    struct ThinLensCamera camera;
-    camera.eye = position;
-    camera.lookat = position + heading;
-    camera.up = (float3)(0, 1, 0);
-    camera.vpdist = 3;
-    camera.fpdist = 4;
-    camera.lens_radius = lens_radius;
-    thinlens_camera_compute_uvw(&camera);
-
     int2 pos = (int2)(get_global_id(0), get_global_id(1));
     float4 origCVal = (float4)(0.f);
 
-    if (sampleNum > 0) {
+    if (sampleNum > 0)
         origCVal = read_imagef(input, pos);
-    }
 
     // Size in float2s
     int sampleSetSize = config->sampleRoot * config->sampleRoot;
     int sampleSetIndex = ((pos.x * config->height) + pos.y) % numSampleSets;
     int offset = sampleSetIndex * sampleSetSize;
+
+    // Select sample sets
     __global float2 *squareSamples = squareSampleSets + offset;
     __global float2 *diskSamples = diskSampleSets + offset;
 
+    // Select samples
     float2 squareSample = squareSamples[sampleIdx];
     float2 diskSample = diskSamples[sampleIdx];
-    // float4 newCVal = pinhole_camera_render(&camera, &s, width, height, traceDepth, pos, squareSample);
-    float4 newCVal = thinlens_camera_render(&camera, &s, config->width, config->height, config->traceDepth, pos, squareSample, diskSample);
 
-    if (sampleNum > 0) {
-        newCVal = (origCVal * sampleNum + newCVal) / (sampleNum + 1);
+    float4 newCVal;
+
+    // Configure camera and trace ray
+    if (s.cameraType == CAMERA_THINLENS) {
+        s.cameras.thinLensCamera.eye = position;
+        s.cameras.thinLensCamera.lookat = position + heading;
+        s.cameras.thinLensCamera.lens_radius = lens_radius;
+        thinlens_camera_compute_uvw(&s.cameras.thinLensCamera);
+
+        newCVal = thinlens_camera_render(&s.cameras.thinLensCamera, &s,
+                config->width, config->height, config->traceDepth,
+                pos, squareSample, diskSample);
+    } else if (s.cameraType == CAMERA_PINHOLE) {
+        s.cameras.pinholeCamera.eye = position;
+        s.cameras.pinholeCamera.lookat = position + heading;
+        pinhole_camera_compute_uvw(&s.cameras.pinholeCamera);
+
+        newCVal = pinhole_camera_render(&s.cameras.pinholeCamera, &s,
+                config->width, config->height, config->traceDepth,
+                pos, squareSample);
     }
 
+    // If this isn't the first sample for this frame, combine the new
+    // sample with the old ones.
+    if (sampleNum > 0)
+        newCVal = (origCVal * sampleNum + newCVal) / (sampleNum + 1);
+
+    // Write the final sample value to the output image.
     write_imagef(output, pos, newCVal);
 }

@@ -1,4 +1,11 @@
 
+#ifndef T2_TRACE_CL
+#define T2_TRACE_CL
+
+#include <t2/stack.cl>
+#include <t2/sphere.cl>
+#include <t2/plane.cl>
+
 static float3 reflect(float3 A, float3 B)
 {
     return B - ((float3)2) * (float3)dot(A, B) * A;
@@ -125,3 +132,5 @@ static float4 recursivetrace(struct Scene *s, uint traceDepth, struct Ray *r)
 
     return c;
 }
+
+#endif

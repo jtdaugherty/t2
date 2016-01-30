@@ -1,4 +1,7 @@
 
+#ifndef T2_STACK_CL
+#define T2_STACK_CL
+
 #include <t2/types.cl>
 
 #define STACK_DEPTH 20
@@ -20,3 +23,5 @@ static void push(struct RayStack *s, struct Ray *r, int depth)
         s->top++;
     }
 }
+
+#endif
