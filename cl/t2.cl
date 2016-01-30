@@ -33,22 +33,27 @@ __kernel void raytracer(
     int2 pos = (int2)(get_global_id(0), get_global_id(1));
     float4 origCVal = (float4)(0.f);
 
+    // If this isn't the first sample for this frame, read the previous
+    // sample data from the input image. Otherwise we take the current
+    // sample as the first sample.
     if (sampleNum > 0)
         origCVal = read_imagef(input, pos);
 
-    // Size in float2s
+    // Compute the sample set offset in the sample set buffers based on
+    // the coordinates of the current pixel being traced.
     int sampleSetSize = config->sampleRoot * config->sampleRoot;
     int sampleSetIndex = ((pos.x * config->height) + pos.y) % numSampleSets;
     int offset = sampleSetIndex * sampleSetSize;
 
-    // Select sample sets
+    // Get pointers to sample sets.
     __global float2 *squareSamples = squareSampleSets + offset;
     __global float2 *diskSamples = diskSampleSets + offset;
 
-    // Select samples
+    // Select samples from sets based on current sample index.
     float2 squareSample = squareSamples[sampleIdx];
     float2 diskSample = diskSamples[sampleIdx];
 
+    // newCVal is where we store the current color.
     float4 newCVal;
 
     // Configure camera and trace ray
