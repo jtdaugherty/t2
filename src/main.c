@@ -64,8 +64,10 @@ static inline void restartRendering()
 
 static inline void rotateHeading(cl_float angle)
 {
-    programState.heading[0] = cos(angle) * programState.heading[0] - sin(angle) * programState.heading[2];
-    programState.heading[2] = sin(angle) * programState.heading[0] + cos(angle) * programState.heading[2];
+    programState.heading[0] = cos(angle) * programState.heading[0] -
+                              sin(angle) * programState.heading[2];
+    programState.heading[2] = sin(angle) * programState.heading[0] +
+                              cos(angle) * programState.heading[2];
 
     normalize(programState.heading);
 }
@@ -206,7 +208,8 @@ int main(int argc, char **argv)
     glfwWindowHint(GLFW_SRGB_CAPABLE, GL_TRUE);
 
     /* Create a windowed mode window and its OpenGL context */
-    GLFWwindow* window = glfwCreateWindow(config.width, config.height, "t2", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(config.width, config.height, "t2",
+                                          NULL, NULL);
     if (!window)
     {
         log_error("Could not create GLFW window");
@@ -270,21 +273,24 @@ int main(int argc, char **argv)
 
     /* Create rendering texture buffers */
     res.readTexture = make_texture(config.width, config.height);
-    cl_mem texmemRead = clCreateFromGLTexture(context, CL_MEM_READ_WRITE, GL_TEXTURE_2D, 0, res.readTexture, &ret);
+    cl_mem texmemRead = clCreateFromGLTexture(context, CL_MEM_READ_WRITE, GL_TEXTURE_2D,
+            0, res.readTexture, &ret);
     if (ret) {
         log_error("Could not create shared OpenCL/OpenGL texture 1, ret %d", ret);
         exit(1);
     }
 
     res.writeTexture = make_texture(config.width, config.height);
-    cl_mem texmemWrite = clCreateFromGLTexture(context, CL_MEM_READ_WRITE, GL_TEXTURE_2D, 0, res.writeTexture, &ret);
+    cl_mem texmemWrite = clCreateFromGLTexture(context, CL_MEM_READ_WRITE, GL_TEXTURE_2D,
+            0, res.writeTexture, &ret);
     if (ret) {
         log_error("Could not create shared OpenCL/OpenGL texture 2, ret %d", ret);
         exit(1);
     }
 
     size_t numSampleSets = config.width * 10;
-    size_t samplesSize = sizeof(cl_float) * config.sampleRoot * config.sampleRoot * 2 * numSampleSets;
+    size_t samplesSize = sizeof(cl_float) * config.sampleRoot * config.sampleRoot * 2 *
+        numSampleSets;
 
     log_info("Generating %d samples per pixel", config.sampleRoot * config.sampleRoot);
     log_info("Sample data:");
@@ -357,7 +363,8 @@ int main(int argc, char **argv)
                support read-write images, we have to have two: one to
                read, one to write, and some code to copy between them at
                the right time (now). */
-            copyTexture(res.fbo, res.writeTexture, res.readTexture, config.width, config.height);
+            copyTexture(res.fbo, res.writeTexture, res.readTexture,
+                    config.width, config.height);
 
             /* Set OpenCL Kernel Parameters */
             ret = 0;
@@ -394,7 +401,8 @@ int main(int argc, char **argv)
 
             /* Execute OpenCL Kernel */
             size_t global_work_size[2] = { config.width, config.height };
-            ret = clEnqueueNDRangeKernel(command_queue, kernel, 2, NULL, global_work_size, NULL, 0, NULL, NULL);
+            ret = clEnqueueNDRangeKernel(command_queue, kernel, 2, NULL, global_work_size,
+                    NULL, 0, NULL, NULL);
             if (ret) {
                 log_error("Could not enqueue task");
                 exit(1);
@@ -415,7 +423,9 @@ int main(int argc, char **argv)
 
             programState.sampleIdx++;
 
-            snprintf(title, sizeof(title), "t2 [%d/%d samples]", programState.sampleIdx, maxSamples);
+            snprintf(title, sizeof(title), "t2 [%d/%d samples]", programState.sampleIdx,
+                    maxSamples);
+
             glfwSetWindowTitle(window, title);
 
             glClear(GL_COLOR_BUFFER_BIT);
