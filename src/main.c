@@ -18,22 +18,32 @@
 
 int global_log_level = LOG_DEBUG;
 
-// Position vector
-cl_float position[3] = { 0, 1.0, -5.0 };
-
-// Heading vector
-cl_float heading[3] = { 0.0, 0.0, 1.0 };
-
-// Camera lens radius
-cl_float lens_radius = 0.07;
-
-cl_uint sampleIdx = 0;
-
 struct configuration {
     cl_uint traceDepth;
     int sampleRoot;
     int width;
     int height;
+};
+
+struct state {
+    // Position vector
+    cl_float position[3];
+
+    // Heading vector
+    cl_float heading[3];
+
+    // Camera lens radius
+    cl_float lens_radius;
+
+    // Current sample index being rendered
+    cl_uint sampleIdx;
+};
+
+struct state programState = {
+    .position = { 0, 1.0, -5.0 },
+    .heading = { 0.0, 0.0, 1.0 },
+    .lens_radius = 0.07,
+    .sampleIdx = 0
 };
 
 /* Default configuration */
@@ -49,10 +59,10 @@ double cursorY;
 
 static inline void rotateHeading(cl_float angle)
 {
-    heading[0] = cos(angle) * heading[0] - sin(angle) * heading[2];
-    heading[2] = sin(angle) * heading[0] + cos(angle) * heading[2];
+    programState.heading[0] = cos(angle) * programState.heading[0] - sin(angle) * programState.heading[2];
+    programState.heading[2] = sin(angle) * programState.heading[0] + cos(angle) * programState.heading[2];
 
-    normalize(heading);
+    normalize(programState.heading);
 }
 
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
@@ -80,7 +90,7 @@ void cursor_position_callback(GLFWwindow* window, double x, double y)
         cursorX = x;
         cursorY = y;
 
-        sampleIdx = 0;
+        programState.sampleIdx = 0;
     }
 }
 
@@ -104,27 +114,27 @@ static void key_callback(GLFWwindow* window, int key, int scancode,
         glfwSetWindowShouldClose(window, GL_TRUE);
 
     if (DECREASE_DEPTH && config.traceDepth > 0) {
-        sampleIdx = 0;
+        programState.sampleIdx = 0;
         config.traceDepth = config.traceDepth == 0 ? 0 : config.traceDepth - 1;
         log_info("Trace depth: %d", config.traceDepth);
     }
 
     if (INCREASE_DEPTH) {
-        sampleIdx = 0;
+        programState.sampleIdx = 0;
         config.traceDepth++;
         log_info("Trace depth: %d", config.traceDepth);
     }
 
-    if (DECREASE_RADIUS && lens_radius > 0.0) {
-        lens_radius = MAXF(lens_radius - 0.01, 0.0);
-        sampleIdx = 0;
-        log_info("Lens radius: %f", lens_radius);
+    if (DECREASE_RADIUS && programState.lens_radius > 0.0) {
+        programState.lens_radius = MAXF(programState.lens_radius - 0.01, 0.0);
+        programState.sampleIdx = 0;
+        log_info("Lens radius: %f", programState.lens_radius);
     }
 
     if (INCREASE_RADIUS) {
-        lens_radius += 0.01;
-        sampleIdx = 0;
-        log_info("Lens radius: %f", lens_radius);
+        programState.lens_radius += 0.01;
+        programState.sampleIdx = 0;
+        log_info("Lens radius: %f", programState.lens_radius);
     }
 
     // Movement keys translate the position vector based on the heading
@@ -133,29 +143,29 @@ static void key_callback(GLFWwindow* window, int key, int scancode,
     float headingZ = 0.0;
 
     if (MOVE_FORWARD) {
-        headingX = vel * heading[0];
-        headingZ = vel * heading[2];
+        headingX = vel * programState.heading[0];
+        headingZ = vel * programState.heading[2];
     }
 
     if (MOVE_LEFT) {
-        headingX = -1 * vel * heading[0];
-        headingZ = -1 * vel * heading[2];
+        headingX = -1 * vel * programState.heading[0];
+        headingZ = -1 * vel * programState.heading[2];
     }
 
     if (MOVE_RIGHT) {
-        headingX = -1 * vel * heading[2];
-        headingZ = vel * heading[0];
+        headingX = -1 * vel * programState.heading[2];
+        headingZ = vel * programState.heading[0];
     }
 
     if (MOVE_BACKWARD) {
-        headingX = vel * heading[2];
-        headingZ = -1 * vel * heading[0];
+        headingX = vel * programState.heading[2];
+        headingZ = -1 * vel * programState.heading[0];
     }
 
     if (headingX != 0 || headingZ != 0) {
-        sampleIdx = 0;
-        position[0] += headingX;
-        position[2] += headingZ;
+        programState.sampleIdx = 0;
+        programState.position[0] += headingX;
+        programState.position[2] += headingZ;
     }
 }
 
@@ -319,7 +329,7 @@ int main()
 
     while (!glfwWindowShouldClose(window))
     {
-        if (sampleIdx < maxSamples) {
+        if (programState.sampleIdx < maxSamples) {
             /* Before we begin collecting a new sample, copy the old
                write buffer to the read buffer. This is critical because
                the kernel reads the image data and averages new sample
@@ -336,14 +346,14 @@ int main()
             ret |= clSetKernelArg(kernel, 1,    sizeof(cl_mem),      &texmemWrite);
             ret |= clSetKernelArg(kernel, 2,    sizeof(width),       &width);
             ret |= clSetKernelArg(kernel, 3,    sizeof(height),      &height);
-            ret |= clSetKernelArg(kernel, 4,    sizeof(position),    position);
-            ret |= clSetKernelArg(kernel, 5,    sizeof(heading),     heading);
-            ret |= clSetKernelArg(kernel, 6,    sizeof(lens_radius), &lens_radius);
+            ret |= clSetKernelArg(kernel, 4,    sizeof(programState.position),    programState.position);
+            ret |= clSetKernelArg(kernel, 5,    sizeof(programState.heading),     programState.heading);
+            ret |= clSetKernelArg(kernel, 6,    sizeof(programState.lens_radius), &programState.lens_radius);
             ret |= clSetKernelArg(kernel, 7,    sizeof(cl_mem),      &squareSampleBuf);
             ret |= clSetKernelArg(kernel, 8,    sizeof(cl_mem),      &diskSampleBuf);
             ret |= clSetKernelArg(kernel, 9,    sizeof(cl_int),      &numSampleSets);
             ret |= clSetKernelArg(kernel, 10,   sizeof(cl_int),      &config.sampleRoot);
-            ret |= clSetKernelArg(kernel, 11,   sizeof(sampleIdx),   &sampleIdx);
+            ret |= clSetKernelArg(kernel, 11,   sizeof(programState.sampleIdx),   &programState.sampleIdx);
             ret |= clSetKernelArg(kernel, 12,   sizeof(config.traceDepth),  &config.traceDepth);
 
             if (ret) {
@@ -384,9 +394,9 @@ int main()
                 exit(1);
             }
 
-            sampleIdx++;
+            programState.sampleIdx++;
 
-            snprintf(title, sizeof(title), "t2 [%d/%d samples]", sampleIdx, maxSamples);
+            snprintf(title, sizeof(title), "t2 [%d/%d samples]", programState.sampleIdx, maxSamples);
             glfwSetWindowTitle(window, title);
 
             glClear(GL_COLOR_BUFFER_BIT);
