@@ -4,7 +4,7 @@
 
 #include <t2/samplers.h>
 
-float randFloat()
+static inline float randFloat()
 {
     u_int32_t upper_bound = 0xffffffff;
     return ((float)arc4random_uniform(upper_bound))/((float)upper_bound);
