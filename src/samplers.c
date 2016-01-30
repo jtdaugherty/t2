@@ -46,10 +46,13 @@ void mapToUnitDisk(float *x, float *y)
 
 void generateRandomSampleSet(float *samples, int sampleRoot, void(*map)(float*, float*))
 {
-    for (int i = 0; i < sampleRoot; i++) {
-        for (int j = 0; j < sampleRoot; j++) {
-            float x = randFloat();
-            float y = randFloat();
+    float x, y;
+    int i, j;
+
+    for (i = 0; i < sampleRoot; i++) {
+        for (j = 0; j < sampleRoot; j++) {
+            x = randFloat();
+            y = randFloat();
 
             if (map)
                 map(&x, &y);
@@ -63,10 +66,13 @@ void generateRandomSampleSet(float *samples, int sampleRoot, void(*map)(float*, 
 void generateJitteredSampleSet(float *samples, int sampleRoot, void(*map)(float*, float*))
 {
     float inc = 1.0 / ((float) sampleRoot);
-    for (int i = 0; i < sampleRoot; i++) {
-        for (int j = 0; j < sampleRoot; j++) {
-            float x = (i * inc) + randFloat() * inc;
-            float y = (j * inc) + randFloat() * inc;
+    float x, y;
+    int i, j;
+
+    for (i = 0; i < sampleRoot; i++) {
+        for (j = 0; j < sampleRoot; j++) {
+            x = (i * inc) + randFloat() * inc;
+            y = (j * inc) + randFloat() * inc;
 
             if (map)
                 map(&x, &y);
