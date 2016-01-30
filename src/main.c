@@ -29,7 +29,20 @@ cl_float lens_radius = 0.07;
 
 cl_uint sampleIdx = 0;
 
-cl_uint traceDepth = 5;
+struct configuration {
+    cl_uint traceDepth;
+    int sampleRoot;
+    int width;
+    int height;
+};
+
+/* Default configuration */
+struct configuration config = {
+    .traceDepth = 5,
+    .sampleRoot = 1,
+    .width = 640,
+    .height = 480
+};
 
 double cursorX;
 double cursorY;
@@ -90,16 +103,16 @@ static void key_callback(GLFWwindow* window, int key, int scancode,
     if (QUIT)
         glfwSetWindowShouldClose(window, GL_TRUE);
 
-    if (DECREASE_DEPTH && traceDepth > 0) {
+    if (DECREASE_DEPTH && config.traceDepth > 0) {
         sampleIdx = 0;
-        traceDepth = traceDepth == 0 ? 0 : traceDepth - 1;
-        log_info("Trace depth: %d", traceDepth);
+        config.traceDepth = config.traceDepth == 0 ? 0 : config.traceDepth - 1;
+        log_info("Trace depth: %d", config.traceDepth);
     }
 
     if (INCREASE_DEPTH) {
         sampleIdx = 0;
-        traceDepth++;
-        log_info("Trace depth: %d", traceDepth);
+        config.traceDepth++;
+        log_info("Trace depth: %d", config.traceDepth);
     }
 
     if (DECREASE_RADIUS && lens_radius > 0.0) {
@@ -177,7 +190,7 @@ int main()
     glfwWindowHint(GLFW_SRGB_CAPABLE, GL_TRUE);
 
     /* Create a windowed mode window and its OpenGL context */
-    GLFWwindow* window = glfwCreateWindow(1024, 768, "t2", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(config.width, config.height, "t2", NULL, NULL);
     if (!window)
     {
         log_error("Could not create GLFW window");
@@ -255,23 +268,21 @@ int main()
         exit(1);
     }
 
-    int sampleRoot = 10;
     int numSampleSets = width * 10;
-    int samplesSize = sizeof(cl_float) * sampleRoot * sampleRoot * 2 * numSampleSets;
+    int samplesSize = sizeof(cl_float) * config.sampleRoot * config.sampleRoot * 2 * numSampleSets;
 
-    log_info("Generating %d samples per pixel", sampleRoot * sampleRoot);
+    log_info("Generating %d samples per pixel", config.sampleRoot * config.sampleRoot);
     log_info("Sample data:");
     log_info("  Types: square, disk");
     log_info("  %d sample sets per type", numSampleSets);
-    log_info("  %d samples per set", sampleRoot * sampleRoot);
     log_info("  %d bytes memory allocated per type", samplesSize);
 
     /* Allocate and populate square sample sets */
     cl_float *squareSamples = malloc(samplesSize);
     for (int i = 0; i < numSampleSets; i++) {
         // Offset in number of floats for this set
-        size_t offset = i * (2 * sampleRoot * sampleRoot);
-        generateJitteredSampleSet(squareSamples + offset, sampleRoot, NULL);
+        size_t offset = i * (2 * config.sampleRoot * config.sampleRoot);
+        generateJitteredSampleSet(squareSamples + offset, config.sampleRoot, NULL);
     }
 
     /* Set up OpenCL buffer reference to square sample memory */
@@ -286,8 +297,8 @@ int main()
     cl_float *diskSamples = malloc(samplesSize);
     for (int i = 0; i < numSampleSets; i++) {
         // Offset in number of floats for this set
-        size_t offset = i * (2 * sampleRoot * sampleRoot);
-        generateJitteredSampleSet(diskSamples + offset, sampleRoot, mapToUnitDisk);
+        size_t offset = i * (2 * config.sampleRoot * config.sampleRoot);
+        generateJitteredSampleSet(diskSamples + offset, config.sampleRoot, mapToUnitDisk);
     }
 
     /* Set up OpenCL buffer reference to disk sample memory */
@@ -299,7 +310,7 @@ int main()
     }
 
     char title[64];
-    cl_uint maxSamples = sampleRoot * sampleRoot;
+    cl_uint maxSamples = config.sampleRoot * config.sampleRoot;
 
     glfwSwapInterval(1);
     glGenFramebuffers(1, &res.fbo);
@@ -331,9 +342,9 @@ int main()
             ret |= clSetKernelArg(kernel, 7,    sizeof(cl_mem),      &squareSampleBuf);
             ret |= clSetKernelArg(kernel, 8,    sizeof(cl_mem),      &diskSampleBuf);
             ret |= clSetKernelArg(kernel, 9,    sizeof(cl_int),      &numSampleSets);
-            ret |= clSetKernelArg(kernel, 10,   sizeof(cl_int),      &sampleRoot);
+            ret |= clSetKernelArg(kernel, 10,   sizeof(cl_int),      &config.sampleRoot);
             ret |= clSetKernelArg(kernel, 11,   sizeof(sampleIdx),   &sampleIdx);
-            ret |= clSetKernelArg(kernel, 12,   sizeof(traceDepth),  &traceDepth);
+            ret |= clSetKernelArg(kernel, 12,   sizeof(config.traceDepth),  &config.traceDepth);
 
             if (ret) {
                 log_error("Could not set kernel argument, ret %d", ret);
