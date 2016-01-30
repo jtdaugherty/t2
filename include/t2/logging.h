@@ -10,6 +10,9 @@
 #define LOG_INFO     (1 << 2)
 #define LOG_DEBUG    (1 << 3)
 
+const char * log_level_name(int log_level);
+int log_level_from_name(char *name);
+
 extern int *global_log_level;
 
 #define do_log(level, level_str, fmt, ...) do { \

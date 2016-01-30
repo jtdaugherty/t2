@@ -23,7 +23,9 @@ OBJS = \
        src/util.o \
 	   src/shader_setup.o \
 	   src/texture.o \
-	   src/samplers.o
+	   src/samplers.o \
+	   src/logging.o \
+	   src/args.o
 
 $(PROGNAME): $(OBJS)
 	gcc $(CFLAGS) -o $(PROGNAME) $(OBJS) $(LIBS)

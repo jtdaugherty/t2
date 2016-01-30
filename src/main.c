@@ -15,23 +15,8 @@
 #include <t2/shader_setup.h>
 #include <t2/texture.h>
 #include <t2/samplers.h>
-
-struct configuration {
-    // How deeply will reflective tracing go?
-    cl_uint traceDepth;
-
-    // If this is r, we take r*r samples per pixel
-    int sampleRoot;
-
-    // Window width
-    int width;
-
-    // Window height
-    int height;
-
-    // Log level (see t2/logging.h)
-    int logLevel;
-};
+#include <t2/config.h>
+#include <t2/args.h>
 
 struct state {
     // Position vector
@@ -201,7 +186,7 @@ void logVersionInfo()
     log_info("GLEW version: %s", glewGetString(GLEW_VERSION));
 }
 
-int main()
+int main(int argc, char **argv)
 {
     cl_platform_id platform_id = NULL;
     cl_command_queue command_queue = NULL;
@@ -209,6 +194,8 @@ int main()
     cl_kernel kernel = NULL;
     cl_int ret = -1;
     glResources res;
+
+    processArgs(argc, argv, &config);
 
     /* Initialize the library */
     if (!glfwInit())
@@ -296,22 +283,29 @@ int main()
         exit(1);
     }
 
-    int numSampleSets = config.width * 10;
-    int samplesSize = sizeof(cl_float) * config.sampleRoot * config.sampleRoot * 2 * numSampleSets;
+    size_t numSampleSets = config.width * 10;
+    size_t samplesSize = sizeof(cl_float) * config.sampleRoot * config.sampleRoot * 2 * numSampleSets;
 
     log_info("Generating %d samples per pixel", config.sampleRoot * config.sampleRoot);
     log_info("Sample data:");
     log_info("  Types: square, disk");
-    log_info("  %d sample sets per type", numSampleSets);
-    log_info("  %d bytes memory allocated per type", samplesSize);
+    log_info("  %ld sample sets per type", numSampleSets);
+    log_info("  %ld bytes memory allocated per type", samplesSize);
 
+    log_info("Generating square samples...");
     /* Allocate and populate square sample sets */
     cl_float *squareSamples = malloc(samplesSize);
+    if (!squareSamples) {
+        log_error("Could not allocate %ld bytes of memory for square samples", samplesSize);
+        exit(1);
+    }
+
     for (int i = 0; i < numSampleSets; i++) {
         // Offset in number of floats for this set
         size_t offset = i * (2 * config.sampleRoot * config.sampleRoot);
         generateJitteredSampleSet(squareSamples + offset, config.sampleRoot, NULL);
     }
+    log_info("Done generating square samples.");
 
     /* Set up OpenCL buffer reference to square sample memory */
     cl_mem squareSampleBuf = clCreateBuffer(context, CL_MEM_USE_HOST_PTR|CL_MEM_READ_ONLY,
@@ -321,13 +315,20 @@ int main()
         exit(1);
     }
 
+    log_info("Generating disk samples...");
     /* Allocate and populate disk sample sets */
     cl_float *diskSamples = malloc(samplesSize);
+    if (!diskSamples) {
+        log_error("Could not allocate %ld bytes of memory for disk samples", samplesSize);
+        exit(1);
+    }
+
     for (int i = 0; i < numSampleSets; i++) {
         // Offset in number of floats for this set
         size_t offset = i * (2 * config.sampleRoot * config.sampleRoot);
         generateJitteredSampleSet(diskSamples + offset, config.sampleRoot, mapToUnitDisk);
     }
+    log_info("Done generating disk samples.");
 
     /* Set up OpenCL buffer reference to disk sample memory */
     cl_mem diskSampleBuf = clCreateBuffer(context, CL_MEM_USE_HOST_PTR|CL_MEM_READ_ONLY,
