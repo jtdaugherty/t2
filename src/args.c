@@ -59,10 +59,12 @@ void processArgs(int argc, char **argv, struct configuration *config)
 
             case 'l':
                 logLevel = log_level_from_name(optarg);
-                if (logLevel != -1) {
-                    newConfig.logLevel = logLevel;
-                    goto done;
+                if (logLevel == -1) {
+                    goto bad;
                 }
+
+                newConfig.logLevel = logLevel;
+                break;
 
             case '?':
             case 'h':
@@ -73,7 +75,6 @@ bad:
         }
     }
 
-done:
     *config = newConfig;
     return;
 }
