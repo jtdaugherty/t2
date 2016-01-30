@@ -309,7 +309,7 @@ int main(int argc, char **argv)
         exit(1);
     }
 
-    size_t numSampleSets = config.width * 10;
+    size_t numSampleSets = config.width * 23.5;
     size_t samplesSize = sizeof(cl_float) * config.sampleRoot * config.sampleRoot * 2 *
         numSampleSets;
 
