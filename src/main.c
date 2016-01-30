@@ -55,8 +55,10 @@ struct configuration config = {
     .height = 480
 };
 
-double cursorX;
-double cursorY;
+/* Last known mouse cursor position for computing deltas during mouse
+movement */
+static double cursorX;
+static double cursorY;
 
 static inline void rotateHeading(cl_float angle)
 {
