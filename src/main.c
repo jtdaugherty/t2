@@ -46,7 +46,7 @@ struct configuration config = {
     .sampleRoot = 1,
     .width = 640,
     .height = 480,
-    .logLevel = LOG_DEBUG
+    .logLevel = LOG_INFO
 };
 
 /* For logging.h to get access to the global log level */
