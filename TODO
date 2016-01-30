@@ -9,3 +9,5 @@
   GPU rather than per-pixel, per-sample scene-building
 - Command-line argument processing to set
   * device preference (e.g. cpu vs gpu)
+- Make it possible to batch-process sample ranges in a single GPU pass
+  (and to configure the batch size)
