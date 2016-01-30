@@ -10,6 +10,19 @@ static inline float randFloat()
     return ((float)arc4random_uniform(upper_bound))/((float)upper_bound);
 }
 
+void shuffle(int *array, size_t n)
+{
+    if (n > 1) {
+        size_t i;
+        for (i = n - 1; i > 0; i--) {
+            size_t j = (unsigned int) (arc4random_uniform(i+1));
+            int t = array[j];
+            array[j] = array[i];
+            array[i] = t;
+        }
+    }
+}
+
 void mapToUnitDisk(float *x, float *y)
 {
     float spX, spY, phi, r;

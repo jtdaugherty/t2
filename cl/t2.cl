@@ -21,6 +21,7 @@ __kernel void raytracer(
         int numSampleSets,
         int sampleRoot,
         uint sampleIdx,
+        uint sampleNum,
         uint traceDepth)
 {
     struct Scene s;
@@ -45,7 +46,7 @@ __kernel void raytracer(
     int2 pos = (int2)(get_global_id(0), get_global_id(1));
     float4 origCVal = (float4)(0.f);
 
-    if (sampleIdx > 0) {
+    if (sampleNum > 0) {
         origCVal = read_imagef(input, pos);
     }
 
@@ -61,8 +62,8 @@ __kernel void raytracer(
     // float4 newCVal = pinhole_camera_render(&camera, &s, width, height, traceDepth, pos, squareSample);
     float4 newCVal = thinlens_camera_render(&camera, &s, width, height, traceDepth, pos, squareSample, diskSample);
 
-    if (sampleIdx > 0) {
-        newCVal = (origCVal * sampleIdx + newCVal) / (sampleIdx + 1);
+    if (sampleNum > 0) {
+        newCVal = (origCVal * sampleNum + newCVal) / (sampleNum + 1);
     }
 
     write_imagef(output, pos, newCVal);

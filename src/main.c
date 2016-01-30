@@ -352,6 +352,14 @@ int main(int argc, char **argv)
 
     log_info("Ready.");
 
+    // Create a sample index indirection layer so we can randomize
+    // sample index selection to avoid visual artifacts from processing
+    // the samples in spatial order.
+    int sampleIndices[maxSamples];
+    for (int i = 0; i < maxSamples; i++)
+        sampleIndices[i] = i;
+    shuffle(sampleIndices, maxSamples);
+
     while (!glfwWindowShouldClose(window))
     {
         if (programState.sampleIdx < maxSamples) {
@@ -366,6 +374,8 @@ int main(int argc, char **argv)
             copyTexture(res.fbo, res.writeTexture, res.readTexture,
                     config.width, config.height);
 
+            int thisSampleIdx = sampleIndices[programState.sampleIdx];
+
             /* Set OpenCL Kernel Parameters */
             ret = 0;
             ret |= clSetKernelArg(kernel, 0,    sizeof(cl_mem),      &texmemRead);
@@ -379,8 +389,9 @@ int main(int argc, char **argv)
             ret |= clSetKernelArg(kernel, 8,    sizeof(cl_mem),      &diskSampleBuf);
             ret |= clSetKernelArg(kernel, 9,    sizeof(cl_int),      &numSampleSets);
             ret |= clSetKernelArg(kernel, 10,   sizeof(cl_int),      &config.sampleRoot);
-            ret |= clSetKernelArg(kernel, 11,   sizeof(programState.sampleIdx),   &programState.sampleIdx);
-            ret |= clSetKernelArg(kernel, 12,   sizeof(config.traceDepth),  &config.traceDepth);
+            ret |= clSetKernelArg(kernel, 11,   sizeof(thisSampleIdx),   &thisSampleIdx);
+            ret |= clSetKernelArg(kernel, 12,   sizeof(programState.sampleIdx),   &programState.sampleIdx);
+            ret |= clSetKernelArg(kernel, 13,   sizeof(config.traceDepth),  &config.traceDepth);
 
             if (ret) {
                 log_error("Could not set kernel argument, ret %d", ret);
