@@ -4,6 +4,7 @@
 
 #include <t2/types.cl>
 #include <t2/trace.cl>
+#include <t2/config.cl>
 
 static void thinlens_camera_compute_uvw(struct ThinLensCamera *camera)
 {
@@ -25,19 +26,19 @@ static float3 thinlens_camera_ray_direction(struct ThinLensCamera *camera, float
 
 static float4 thinlens_camera_render(
         struct ThinLensCamera *camera, struct Scene *scene,
-        int width, int height,
-        uint traceDepth, int2 coord,
+        __global struct configuration *config,
+        int2 coord,
         float2 squareSample, float2 diskSample)
 {
-    float2 pixelPoint = 0.01f * (float2)(coord.x - (width / 2.f) + squareSample.x,
-                                 coord.y - (height / 2.f) + squareSample.y);
+    float2 pixelPoint = 0.01f * (float2)(coord.x - (config->width / 2.f) + squareSample.x,
+                                         coord.y - (config->height / 2.f) + squareSample.y);
     struct Ray r;
     float2 lensPoint = camera->lens_radius * diskSample;
 
     r.origin = camera->eye + (lensPoint.x * camera->u) + (lensPoint.y * camera->v);
     r.dir = thinlens_camera_ray_direction(camera, pixelPoint, lensPoint);
 
-    return recursivetrace(scene, traceDepth, &r);
+    return recursivetrace(scene, config->traceDepth, &r);
 }
 
 #endif

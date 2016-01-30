@@ -5,15 +5,7 @@
 #include <t2/scene.cl>
 #include <t2/pinhole_camera.cl>
 #include <t2/thinlens_camera.cl>
-
-/* This should match the struct in t2/config.h */
-struct configuration {
-    uint traceDepth;
-    int sampleRoot;
-    int width;
-    int height;
-    int _unused_logLevel;
-};
+#include <t2/config.cl>
 
 __kernel void raytracer(
         __global struct configuration *config,
@@ -64,16 +56,14 @@ __kernel void raytracer(
         thinlens_camera_compute_uvw(&s.cameras.thinLensCamera);
 
         newCVal = thinlens_camera_render(&s.cameras.thinLensCamera, &s,
-                config->width, config->height, config->traceDepth,
-                pos, squareSample, diskSample);
+                config, pos, squareSample, diskSample);
     } else if (s.cameraType == CAMERA_PINHOLE) {
         s.cameras.pinholeCamera.eye = position;
         s.cameras.pinholeCamera.lookat = position + heading;
         pinhole_camera_compute_uvw(&s.cameras.pinholeCamera);
 
         newCVal = pinhole_camera_render(&s.cameras.pinholeCamera, &s,
-                config->width, config->height, config->traceDepth,
-                pos, squareSample);
+                config, pos, squareSample);
     }
 
     // If this isn't the first sample for this frame, combine the new
