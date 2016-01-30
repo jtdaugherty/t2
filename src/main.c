@@ -63,6 +63,11 @@ movement */
 static double cursorX;
 static double cursorY;
 
+static inline void restartRendering()
+{
+    programState.sampleIdx = 0;
+}
+
 static inline void rotateHeading(cl_float angle)
 {
     programState.heading[0] = cos(angle) * programState.heading[0] - sin(angle) * programState.heading[2];
@@ -96,7 +101,7 @@ void cursor_position_callback(GLFWwindow* window, double x, double y)
         cursorX = x;
         cursorY = y;
 
-        programState.sampleIdx = 0;
+        restartRendering();
     }
 }
 
@@ -120,27 +125,27 @@ static void key_callback(GLFWwindow* window, int key, int scancode,
         glfwSetWindowShouldClose(window, GL_TRUE);
 
     if (DECREASE_DEPTH && config.traceDepth > 0) {
-        programState.sampleIdx = 0;
         config.traceDepth = config.traceDepth == 0 ? 0 : config.traceDepth - 1;
         log_info("Trace depth: %d", config.traceDepth);
+        restartRendering();
     }
 
     if (INCREASE_DEPTH) {
-        programState.sampleIdx = 0;
         config.traceDepth++;
         log_info("Trace depth: %d", config.traceDepth);
+        restartRendering();
     }
 
     if (DECREASE_RADIUS && programState.lens_radius > 0.0) {
         programState.lens_radius = MAXF(programState.lens_radius - 0.01, 0.0);
-        programState.sampleIdx = 0;
         log_info("Lens radius: %f", programState.lens_radius);
+        restartRendering();
     }
 
     if (INCREASE_RADIUS) {
         programState.lens_radius += 0.01;
-        programState.sampleIdx = 0;
         log_info("Lens radius: %f", programState.lens_radius);
+        restartRendering();
     }
 
     // Movement keys translate the position vector based on the heading
@@ -169,9 +174,9 @@ static void key_callback(GLFWwindow* window, int key, int scancode,
     }
 
     if (headingX != 0 || headingZ != 0) {
-        programState.sampleIdx = 0;
         programState.position[0] += headingX;
         programState.position[2] += headingZ;
+        restartRendering();
     }
 }
 
