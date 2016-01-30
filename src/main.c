@@ -17,10 +17,19 @@
 #include <t2/samplers.h>
 
 struct configuration {
+    // How deeply will reflective tracing go?
     cl_uint traceDepth;
+
+    // If this is r, we take r*r samples per pixel
     int sampleRoot;
+
+    // Window width
     int width;
+
+    // Window height
     int height;
+
+    // Log level (see t2/logging.h)
     int logLevel;
 };
 
