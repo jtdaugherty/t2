@@ -1,6 +1,6 @@
 - Runtime changes in sample count (w/regeneration of sample values)
 - Acceleration: regular grids?
-- Optional text overlay showing rendering status
+- Make text overlay nicer and add key to toggle overlay visibility
 - Object picking for fun and profit
 - Ambient occlusion
 - Triangle meshes
