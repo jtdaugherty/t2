@@ -5,6 +5,9 @@
 #include <math.h>
 #include <sys/time.h>
 
+#include <ft2build.h>
+#include FT_FREETYPE_H
+
 #include <t2/version.h>
 #include <t2/logging.h>
 #include <t2/info.h>
@@ -18,6 +21,7 @@
 #include <t2/samplers.h>
 #include <t2/config.h>
 #include <t2/args.h>
+#include <t2/text.h>
 
 struct state {
     // Position vector
@@ -207,6 +211,8 @@ void logVersionInfo()
     log_info("GLFW version: %d.%d.%d", maj, min, rev);
 
     log_info("GLEW version: %s", glewGetString(GLEW_VERSION));
+
+    logTextSystemInfo();
 }
 
 int main(int argc, char **argv)
@@ -249,6 +255,13 @@ int main(int argc, char **argv)
     }
 
     logVersionInfo();
+
+    struct font textfont;
+    ret = loadFont(&textfont);
+    if (ret) {
+        log_error("Could not load font, exiting");
+        exit(1);
+    }
 
     glfwSetKeyCallback(window, key_callback);
     glfwSetMouseButtonCallback(window, mouse_button_callback);
@@ -369,7 +382,6 @@ int main(int argc, char **argv)
         exit(1);
     }
 
-    char title[64];
     cl_uint maxSamples = config.sampleRoot * config.sampleRoot;
 
     glfwSwapInterval(1);
@@ -394,6 +406,29 @@ int main(int argc, char **argv)
     shuffle(sampleIndices, maxSamples);
 
     struct timeval start;
+
+    ////////////////////////////////////////////////////////////////////
+    GLuint font_vertex_shader = make_shader(GL_VERTEX_SHADER, "shaders/font.v.glsl");
+    if (!font_vertex_shader) {
+        log_error("Could not load font vertex shader");
+        return 1;
+    }
+
+    GLuint font_fragment_shader = make_shader(GL_FRAGMENT_SHADER, "shaders/font.f.glsl");
+    if (!font_fragment_shader) {
+        log_error("Could not load font fragment shader");
+        return 1;
+    }
+
+    GLuint font_shader_program = make_program(font_vertex_shader, font_fragment_shader);
+    if (!font_shader_program) {
+        log_error("Could not load construct font shader program");
+        return 1;
+    }
+    ////////////////////////////////////////////////////////////////////
+
+    float white[3] = { 1, 1, 1 };
+    char msg[64];
 
     while (!glfwWindowShouldClose(window))
     {
@@ -486,11 +521,6 @@ int main(int argc, char **argv)
                 log_info("Frame time: %f sec", secs);
             }
 
-            snprintf(title, sizeof(title), "t2 [%d/%d samples]", programState.sampleIdx,
-                    maxSamples);
-
-            glfwSetWindowTitle(window, title);
-
             glClear(GL_COLOR_BUFFER_BIT);
 
             glUseProgram(res.shader_program);
@@ -519,6 +549,11 @@ int main(int argc, char **argv)
                     );
 
             glDisableVertexAttribArray(res.position_attribute);
+
+            snprintf(msg, sizeof(msg), "%d/%d samples | radius %f",
+                    programState.sampleIdx, maxSamples, programState.lens_radius);
+            renderText(font_shader_program, config.width, config.height,
+                    &textfont, msg, 5, 7, 1, white);
 
             /* Swap front and back buffers */
             glfwSwapBuffers(window);

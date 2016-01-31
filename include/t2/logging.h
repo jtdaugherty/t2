@@ -24,6 +24,7 @@ extern int *global_log_level;
     } while (0)
 
 #define log_error(fmt, ...) do_log(LOG_ERROR, "ERROR", fmt, ##__VA_ARGS__)
+#define log_warn(fmt, ...)  do_log(LOG_WARN,  "WARN",  fmt, ##__VA_ARGS__)
 #define log_info(fmt, ...)  do_log(LOG_INFO,  "INFO",  fmt, ##__VA_ARGS__)
 #define log_debug(fmt, ...) do_log(LOG_DEBUG, "DEBUG", fmt, ##__VA_ARGS__)
 

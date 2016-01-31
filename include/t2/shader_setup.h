@@ -18,5 +18,7 @@ typedef struct {
 } glResources;
 
 GLuint shader_setup(glResources *res);
+GLuint make_shader(GLenum type, const char *filename);
+GLuint make_program(GLuint vertex_shader, GLuint fragment_shader);
 
 #endif

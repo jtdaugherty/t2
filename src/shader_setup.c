@@ -23,7 +23,7 @@ static void show_info_log(GLuint object,
     free(log);
 }
 
-static GLuint make_shader(GLenum type, const char *filename)
+GLuint make_shader(GLenum type, const char *filename)
 {
     GLint length;
     GLchar *source;
@@ -73,7 +73,7 @@ static GLuint make_shader(GLenum type, const char *filename)
     return shader;
 }
 
-static GLuint make_program(GLuint vertex_shader, GLuint fragment_shader)
+GLuint make_program(GLuint vertex_shader, GLuint fragment_shader)
 {
     GLint program_ok;
 

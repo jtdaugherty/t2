@@ -6,11 +6,13 @@ CFLAGS = \
 		 -DT2_COMMIT=\"$(COMMIT)\" \
 		 -Wall -Iinclude \
 		 $(shell pkg-config --cflags glfw3) \
+		 $(shell pkg-config --cflags freetype2) \
 		 $(shell pkg-config --cflags glew)
 
 LIBS = \
 	   -framework opencl \
 	   $(shell pkg-config --static --libs glfw3) \
+	   $(shell pkg-config --libs freetype2) \
 	   $(shell pkg-config --static --libs glew)
 
 PROGNAME = t2
@@ -25,7 +27,8 @@ OBJS = \
 	   src/texture.o \
 	   src/samplers.o \
 	   src/logging.o \
-	   src/args.o
+	   src/args.o \
+	   src/text.o
 
 $(PROGNAME): $(OBJS)
 	gcc $(CFLAGS) -o $(PROGNAME) $(OBJS) $(LIBS)
