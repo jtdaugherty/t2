@@ -157,13 +157,11 @@ static void key_callback(GLFWwindow* window, int key, int scancode,
 
     if (DECREASE_RADIUS && programState.lens_radius > 0.0) {
         programState.lens_radius = MAXF(programState.lens_radius - 0.01, 0.0);
-        log_info("Lens radius: %f", programState.lens_radius);
         restartRendering();
     }
 
     if (INCREASE_RADIUS) {
         programState.lens_radius += 0.01;
-        log_info("Lens radius: %f", programState.lens_radius);
         restartRendering();
     }
 
