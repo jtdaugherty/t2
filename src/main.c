@@ -147,13 +147,11 @@ static void key_callback(GLFWwindow* window, int key, int scancode,
 
     if (DECREASE_DEPTH && config.traceDepth > 0) {
         config.traceDepth = config.traceDepth == 0 ? 0 : config.traceDepth - 1;
-        log_info("Trace depth: %d", config.traceDepth);
         restartRendering();
     }
 
     if (INCREASE_DEPTH) {
         config.traceDepth++;
-        log_info("Trace depth: %d", config.traceDepth);
         restartRendering();
     }
 
@@ -550,8 +548,9 @@ int main(int argc, char **argv)
 
             glDisableVertexAttribArray(res.position_attribute);
 
-            snprintf(msg, sizeof(msg), "%d/%d samples | radius %f",
-                    programState.sampleIdx, maxSamples, programState.lens_radius);
+            snprintf(msg, sizeof(msg), "%d/%d samples | radius %f | depth %d",
+                    programState.sampleIdx, maxSamples, programState.lens_radius,
+                    config.traceDepth);
             renderText(font_shader_program, config.width, config.height,
                     &textfont, msg, 5, 7, 1, white);
 
