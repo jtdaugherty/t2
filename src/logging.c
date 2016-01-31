@@ -22,13 +22,13 @@ const char * log_level_name(level)
 
 int log_level_from_name(char *name)
 {
-    if (strcmp(name, "ERROR") == 0) {
+    if (strcasecmp(name, "ERROR") == 0) {
         return LOG_ERROR;
-    } else if (strcmp(name, "WARN") == 0) {
+    } else if (strcasecmp(name, "WARN") == 0) {
         return LOG_WARN;
-    } else if (strcmp(name, "INFO") == 0) {
+    } else if (strcasecmp(name, "INFO") == 0) {
         return LOG_INFO;
-    } else if (strcmp(name, "DEBUG") == 0) {
+    } else if (strcasecmp(name, "DEBUG") == 0) {
         return LOG_DEBUG;
     } else {
         return -1;
