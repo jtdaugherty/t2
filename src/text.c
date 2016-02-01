@@ -130,7 +130,7 @@ struct text_configuration* initializeText(struct configuration *main_config)
 }
 
 void renderText(struct text_configuration *config, struct font *font,
-        const char *text, GLfloat x, GLfloat y, GLfloat scale, float *color)
+        const char *text, int len, GLfloat x, GLfloat y, GLfloat scale, float *color)
 {
     glUseProgram(config->shader_program);
 
@@ -145,16 +145,23 @@ void renderText(struct text_configuration *config, struct font *font,
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    int len = strlen(text);
-    for (int c = 0; c < len; c++) {
-        if (c < 0 || c >= FONT_NUM_CHARACTERS)
-            log_warn("Invalid character index %d", c);
+    for (int i = 0; i < len; i++) {
+        unsigned char c = text[i];
+        if (c >= FONT_NUM_CHARACTERS) {
+            log_warn("renderText: %hhu at position %d not valid", c, i);
+            c = '?';
+        } else if (!font->characters[c].loaded) {
+            log_warn("renderText: %hhu at position %d not loaded", c, i);
+            c = '?';
+        }
 
-        struct character ch = font->characters[(int) text[c]];
+        log_debug("Char: %hhu", c);
+
+        struct character ch = font->characters[c];
         if (!ch.loaded)
-            log_error("Requested character '%c' is not loaded", text[c]);
+            log_error("Requested character '%c' is not loaded", c);
         else {
-            log_debug("Character loaded: '%c'", text[c]);
+            log_debug("Character loaded: '%c'", c);
             log_debug("  width: %d", ch.width);
             log_debug("  rows: %d", ch.rows);
         }

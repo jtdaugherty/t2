@@ -35,6 +35,6 @@ void logTextSystemInfo();
 struct text_configuration* initializeText(struct configuration *main_config);
 int loadFont(const char *font_filename, struct font *f);
 void renderText(struct text_configuration *config, struct font *font,
-        const char *text, GLfloat x, GLfloat y, GLfloat scale, float *color);
+        const char *text, int len, GLfloat x, GLfloat y, GLfloat scale, float *color);
 
 #endif

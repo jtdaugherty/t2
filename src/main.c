@@ -531,12 +531,12 @@ int main(int argc, char **argv)
 
             glDisableVertexAttribArray(res.position_attribute);
 
-            snprintf(msg, sizeof(msg), "%d/%d sample%s | radius %f | depth %d",
+            int len = snprintf(msg, sizeof(msg), "%d/%d sample%s | radius %f | depth %d",
                     programState.sampleIdx, maxSamples,
                     (maxSamples == 1 ? "" : "s"),
                     programState.lens_radius,
                     config.traceDepth);
-            renderText(text_config, &stats_font, msg, 5, 7, 1, white);
+            renderText(text_config, &stats_font, msg, len, 5, 7, 1, white);
 
             /* Swap front and back buffers */
             glfwSwapBuffers(window);
