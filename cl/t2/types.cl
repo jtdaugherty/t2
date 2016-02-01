@@ -2,8 +2,7 @@
 #ifndef T2_TYPES_CL
 #define T2_TYPES_CL
 
-#define MAX_PLANES 10
-#define MAX_SPHERES 20
+#define MAX_OBJECTS 20
 #define MAX_LIGHTS 10
 #define MAX_MATERIALS 10
 
@@ -37,16 +36,28 @@ struct ThinLensCamera
 
 struct Sphere
 {
-    uint  material;
     float3 center;
     float radius;
 };
 
 struct Plane
 {
-    uint material;
     float3 normal;
     float3 origin;
+};
+
+enum ObjectType {
+    OBJECT_SPHERE,
+    OBJECT_PLANE
+};
+
+struct Object {
+    enum ObjectType type;
+    union {
+        struct Sphere sphere;
+        struct Plane plane;
+    } types;
+    uint material;
 };
 
 struct Light
@@ -71,13 +82,11 @@ enum CameraType {
 
 struct Scene
 {
-    struct Plane planes[MAX_PLANES];
-    struct Sphere spheres[MAX_SPHERES];
+    struct Object objects[MAX_OBJECTS];
     struct Light  lights[MAX_LIGHTS];
     struct Material materials[MAX_MATERIALS];
 
-    uint numPlanes;
-    uint numSpheres;
+    uint numObjects;
     uint numLights;
     uint numMaterials;
 

@@ -18,27 +18,15 @@ static int findintersection(struct Scene *s, struct Ray *r, struct IntersectionR
         intersection->result = 0;
     }
 
-    for (uint i = 0; i < s->numSpheres; i++)
+    for (uint i = 0; i < s->numObjects; i++)
     {
         float lDist = MAXFLOAT;
-        int res = sphereintersect(&s->spheres[i], r, &lDist);
-        if (res) {
-            if (!intersection) {
-                return res;
-            } else if (lDist < intersection->distance) {
-                intersection->result = res;
-                intersection->distance = lDist;
-                intersection->position = r->origin + r->dir * lDist;
-                intersection->normal = spherenormal(&s->spheres[i], intersection->position);
-                intersection->material = &s->materials[s->spheres[i].material];
-            }
+        int res;
+        if (s->objects[i].type == OBJECT_SPHERE) {
+            res = sphereintersect(&s->objects[i].types.sphere, r, &lDist);
+        } else if (s->objects[i].type == OBJECT_PLANE) {
+            res = planeintersect(&s->objects[i].types.plane, r, &lDist);
         }
-    }
-
-    for (uint i = 0; i < s->numPlanes; i++)
-    {
-        float lDist = MAXFLOAT;
-        int res = planeintersect(&s->planes[i], r, &lDist);
         if (res) {
             if (!intersection) {
                 return res;
@@ -46,8 +34,14 @@ static int findintersection(struct Scene *s, struct Ray *r, struct IntersectionR
                 intersection->result = res;
                 intersection->distance = lDist;
                 intersection->position = r->origin + r->dir * lDist;
-                intersection->normal = (&s->planes[i])->normal;
-                intersection->material = &s->materials[s->planes[i].material];
+
+                if (s->objects[i].type == OBJECT_SPHERE) {
+                    intersection->normal = spherenormal(&s->objects[i].types.sphere, intersection->position);
+                    intersection->material = &s->materials[s->objects[i].material];
+                } else if (s->objects[i].type == OBJECT_PLANE) {
+                    intersection->normal = (&s->objects[i].types.plane)->normal;
+                    intersection->material = &s->materials[s->objects[i].material];
+                }
             }
         }
     }
