@@ -4,10 +4,11 @@
 - Object picking for fun and profit
 - Ambient occlusion
 - Triangle meshes
-- Path tracing w/environment lights (concave spheres)
+- Path tracing w/environment lights, concave spheres
 - Area lighting
 - Host-side scene description and scene-building with single transfer to
   GPU rather than per-pixel, per-sample scene-building
 - Make it possible to batch-process sample ranges in a single GPU pass
-  (and to configure the batch size)
+  (and to configure the batch size) and also investigate any performance
+  difference yielded by batching samples
 - Image output capability (keypress -> write image)

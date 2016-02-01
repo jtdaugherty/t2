@@ -29,6 +29,11 @@ static int findintersection(struct Scene *s, struct Ray *r, struct IntersectionR
         }
         if (res) {
             if (!intersection) {
+                // When there's no intersection record to fill out, it's
+                // because we're doing a shadow ray trace. Since we
+                // don't care which object was closer -- we only care
+                // that we hit _something_ - we return as soon as we
+                // find any hit at all.
                 return res;
             } else if (lDist < intersection->distance) {
                 intersection->result = res;
