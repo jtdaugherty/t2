@@ -5,13 +5,17 @@
 #include <t2/config.h>
 #include <t2/logging.h>
 
+/* Let's be reasonable. */
+#define MAX_SAMPLE_ROOT 32
+
 void usage(char *progname, struct configuration *config)
 {
     printf("Usage: %s [option]\n", progname);
     printf("Options:\n");
     printf("    -h           This help output\n");
     printf("    -d DEPTH     Trace depth (default: %d)\n", config->traceDepth);
-    printf("    -r ROOT      Sample root (default: %d)\n", config->sampleRoot);
+    printf("    -r ROOT      Sample root (default: %d, max: %d)\n", config->sampleRoot,
+                                                                    MAX_SAMPLE_ROOT);
     printf("    -W WIDTH     Window width (default: %d)\n", config->width);
     printf("    -H HEIGHT    Window height (default: %d)\n", config->height);
     printf("    -l LEVEL     Log level (default: %s)\n", log_level_name(config->logLevel));
@@ -39,6 +43,10 @@ void processArgs(int argc, char **argv, struct configuration *config)
                 }
 
                 newConfig.sampleRoot = atoi(optarg);
+
+                if (newConfig.sampleRoot > MAX_SAMPLE_ROOT) {
+                    goto bad;
+                }
                 break;
 
             case 'W':
