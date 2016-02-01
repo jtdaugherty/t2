@@ -59,6 +59,9 @@ struct configuration config = {
 /* For logging.h to get access to the global log level */
 int *global_log_level = &config.logLevel;
 
+/* Whether to show the overlay */
+int show_overlay = 1;
+
 /* Last known mouse cursor position for computing deltas during mouse
 movement */
 static double cursorX;
@@ -143,6 +146,12 @@ static void key_callback(GLFWwindow* window, int key, int scancode,
 #define INCREASE_DEPTH  (PRESS(GLFW_KEY_EQUAL) && SHIFT)
 #define DECREASE_RADIUS (PRESS(GLFW_KEY_R) && (!SHIFT))
 #define INCREASE_RADIUS (PRESS(GLFW_KEY_R) && SHIFT)
+#define TOGGLE_OVERLAY  (PRESS(GLFW_KEY_O))
+
+    if (TOGGLE_OVERLAY) {
+        show_overlay = !show_overlay;
+        log_info("Toggled overlay state, %d", show_overlay);
+    }
 
     if (QUIT)
         glfwSetWindowShouldClose(window, GL_TRUE);
@@ -501,46 +510,48 @@ int main(int argc, char **argv)
                 float secs = ((float)diff.tv_sec) + ((float) diff.tv_usec / 1000000.0);
                 log_info("Frame time: %f sec", secs);
             }
+        }
 
-            glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT);
 
-            glUseProgram(res.shader_program);
+        glUseProgram(res.shader_program);
 
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, res.writeTexture);
-            glUniform1i(res.texture_uniform, 0);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, res.writeTexture);
+        glUniform1i(res.texture_uniform, 0);
 
-            glBindBuffer(GL_ARRAY_BUFFER, res.vertex_buffer);
-            glVertexAttribPointer(
-                    res.position_attribute,          /* attribute */
-                    2,                                /* size */
-                    GL_FLOAT,                         /* type */
-                    GL_FALSE,                         /* normalized? */
-                    sizeof(GLfloat)*2,                /* stride */
-                    (void*)0                          /* array buffer offset */
-                    );
-            glEnableVertexAttribArray(res.position_attribute);
+        glBindBuffer(GL_ARRAY_BUFFER, res.vertex_buffer);
+        glVertexAttribPointer(
+                res.position_attribute,          /* attribute */
+                2,                                /* size */
+                GL_FLOAT,                         /* type */
+                GL_FALSE,                         /* normalized? */
+                sizeof(GLfloat)*2,                /* stride */
+                (void*)0                          /* array buffer offset */
+                );
+        glEnableVertexAttribArray(res.position_attribute);
 
-            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, res.element_buffer);
-            glDrawElements(
-                    GL_TRIANGLE_STRIP,  /* mode */
-                    4,                  /* count */
-                    GL_UNSIGNED_SHORT,  /* type */
-                    (void*)0            /* element array buffer offset */
-                    );
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, res.element_buffer);
+        glDrawElements(
+                GL_TRIANGLE_STRIP,  /* mode */
+                4,                  /* count */
+                GL_UNSIGNED_SHORT,  /* type */
+                (void*)0            /* element array buffer offset */
+                );
 
-            glDisableVertexAttribArray(res.position_attribute);
+        glDisableVertexAttribArray(res.position_attribute);
 
+        if (show_overlay) {
             int len = snprintf(msg, sizeof(msg), "%d/%d sample%s | radius %f | depth %d",
                     programState.sampleIdx, maxSamples,
                     (maxSamples == 1 ? "" : "s"),
                     programState.lens_radius,
                     config.traceDepth);
             renderText(text_config, &stats_font, msg, len, 5, 7, 1, white);
-
-            /* Swap front and back buffers */
-            glfwSwapBuffers(window);
         }
+
+        /* Swap front and back buffers */
+        glfwSwapBuffers(window);
 
         /* Poll for and process events */
         glfwPollEvents();
