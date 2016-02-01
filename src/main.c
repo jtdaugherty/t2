@@ -385,7 +385,6 @@ int main(int argc, char **argv)
     cl_uint maxSamples = config.sampleRoot * config.sampleRoot;
 
     glfwSwapInterval(1);
-    glGenFramebuffers(1, &res.fbo);
 
     /* Set up OpenCL buffer reference to configuration */
     cl_mem configBuf = clCreateBuffer(context, CL_MEM_USE_HOST_PTR|CL_MEM_READ_ONLY,

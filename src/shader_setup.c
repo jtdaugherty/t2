@@ -148,5 +148,7 @@ GLuint shader_setup(glResources *res)
         exit(1);
     }
 
+    glGenFramebuffers(1, &(res->fbo));
+
     return 0;
 }
