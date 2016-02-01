@@ -160,7 +160,7 @@ void renderText(struct text_configuration *config, struct font *font,
         }
 
         GLfloat xpos = x + ch.bitmap_left * scale;
-        GLfloat ypos = y - (ch.rows - ch.bitmap_top) * scale;
+        GLfloat ypos = y - ((float) ch.rows - (float) ch.bitmap_top) * scale;
 
         GLfloat w = ch.width * scale;
         GLfloat h = ch.rows * scale;
