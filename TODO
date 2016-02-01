@@ -12,3 +12,5 @@
   (and to configure the batch size) and also investigate any performance
   difference yielded by batching samples
 - Image output capability (keypress -> write image)
+- Consider increasing window height to make room for overlay (always on,
+  image height + height of overlay)
