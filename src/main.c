@@ -531,8 +531,10 @@ int main(int argc, char **argv)
 
             glDisableVertexAttribArray(res.position_attribute);
 
-            snprintf(msg, sizeof(msg), "%d/%d samples | radius %f | depth %d",
-                    programState.sampleIdx, maxSamples, programState.lens_radius,
+            snprintf(msg, sizeof(msg), "%d/%d sample%s | radius %f | depth %d",
+                    programState.sampleIdx, maxSamples,
+                    (maxSamples == 1 ? "" : "s"),
+                    programState.lens_radius,
                     config.traceDepth);
             renderText(text_config, &stats_font, msg, 5, 7, 1, white);
 
