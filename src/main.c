@@ -23,6 +23,8 @@
 #include <t2/args.h>
 #include <t2/text.h>
 
+#define STATS_FONT_FILENAME        "fonts/InputMono-Regular.ttf"
+
 struct state {
     // Position vector
     cl_float position[3];
@@ -252,13 +254,6 @@ int main(int argc, char **argv)
 
     logVersionInfo();
 
-    struct font textfont;
-    ret = loadFont(&textfont);
-    if (ret) {
-        log_error("Could not load font, exiting");
-        exit(1);
-    }
-
     glfwSetKeyCallback(window, key_callback);
     glfwSetMouseButtonCallback(window, mouse_button_callback);
     glfwSetCursorPosCallback(window, cursor_position_callback);
@@ -391,6 +386,16 @@ int main(int argc, char **argv)
         exit(1);
     }
 
+    struct text_configuration *text_config = initializeText(&config);
+
+    struct font stats_font;
+    ret = loadFont(STATS_FONT_FILENAME, &stats_font);
+    if (ret) {
+        log_error("Could not load font, exiting");
+        exit(1);
+    } else
+        log_info("Loaded stats font %s", STATS_FONT_FILENAME);
+
     log_info("Ready.");
 
     // Create a sample index indirection layer so we can randomize
@@ -402,26 +407,6 @@ int main(int argc, char **argv)
     shuffle(sampleIndices, maxSamples);
 
     struct timeval start;
-
-    ////////////////////////////////////////////////////////////////////
-    GLuint font_vertex_shader = make_shader(GL_VERTEX_SHADER, "shaders/font.v.glsl");
-    if (!font_vertex_shader) {
-        log_error("Could not load font vertex shader");
-        return 1;
-    }
-
-    GLuint font_fragment_shader = make_shader(GL_FRAGMENT_SHADER, "shaders/font.f.glsl");
-    if (!font_fragment_shader) {
-        log_error("Could not load font fragment shader");
-        return 1;
-    }
-
-    GLuint font_shader_program = make_program(font_vertex_shader, font_fragment_shader);
-    if (!font_shader_program) {
-        log_error("Could not load construct font shader program");
-        return 1;
-    }
-    ////////////////////////////////////////////////////////////////////
 
     float white[3] = { 1, 1, 1 };
     char msg[64];
@@ -549,8 +534,7 @@ int main(int argc, char **argv)
             snprintf(msg, sizeof(msg), "%d/%d samples | radius %f | depth %d",
                     programState.sampleIdx, maxSamples, programState.lens_radius,
                     config.traceDepth);
-            renderText(font_shader_program, config.width, config.height,
-                    &textfont, msg, 5, 7, 1, white);
+            renderText(text_config, &stats_font, msg, 5, 7, 1, white);
 
             /* Swap front and back buffers */
             glfwSwapBuffers(window);

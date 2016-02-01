@@ -6,6 +6,8 @@
 #include FT_FREETYPE_H
 #include <OpenGL/gl.h>
 
+#include <t2/config.h>
+
 struct character {
     GLuint texture;
     GLuint width;
@@ -22,9 +24,16 @@ struct font {
     struct character characters[FONT_NUM_CHARACTERS];
 };
 
-int loadFont(struct font *f);
-void renderText(GLuint shader_program, int width, int height, struct font *font,
-        const char *text, GLfloat x, GLfloat y, GLfloat scale, float *color);
+struct text_configuration {
+    int width;
+    int height;
+    GLuint shader_program;
+};
+
 void logTextSystemInfo();
+struct text_configuration* initializeText(struct configuration *main_config);
+int loadFont(const char *font_filename, struct font *f);
+void renderText(struct text_configuration *config, struct font *font,
+        const char *text, GLfloat x, GLfloat y, GLfloat scale, float *color);
 
 #endif

@@ -1,13 +1,12 @@
 
 #include <t2/logging.h>
 #include <t2/text.h>
+#include <t2/shader_setup.h>
 
 #include <OpenGL/gl.h>
 #include <OpenGL/glext.h>
 #include <ft2build.h>
 #include FT_FREETYPE_H
-
-#define FONT_FILENAME        "fonts/InputMono-Regular.ttf"
 
 static int ft_initialized = 0;
 static FT_Library ft;
@@ -26,14 +25,14 @@ static int ensureFreetypeInitialized()
     return 0;
 }
 
-int loadFont(struct font *f)
+int loadFont(const char *font_filename, struct font *f)
 {
     int ret;
     ensureFreetypeInitialized();
 
     FT_Face face;
-    if (FT_New_Face(ft, FONT_FILENAME, 0, &face)) {
-        log_error("Could not open font %s", FONT_FILENAME);
+    if (FT_New_Face(ft, font_filename, 0, &face)) {
+        log_error("Could not open font %s", font_filename);
         return 1;
     }
 
@@ -89,7 +88,37 @@ int loadFont(struct font *f)
     return 0;
 }
 
-void renderText(GLuint shader_program, int width, int height, struct font *font,
+struct text_configuration* initializeText(struct configuration *main_config)
+{
+    struct text_configuration *config = NULL;
+
+    GLuint font_vertex_shader = make_shader(GL_VERTEX_SHADER, "shaders/font.v.glsl");
+    if (!font_vertex_shader) {
+        log_error("Could not load font vertex shader");
+        return NULL;
+    }
+
+    GLuint font_fragment_shader = make_shader(GL_FRAGMENT_SHADER, "shaders/font.f.glsl");
+    if (!font_fragment_shader) {
+        log_error("Could not load font fragment shader");
+        return NULL;
+    }
+
+    GLuint shader_program = make_program(font_vertex_shader, font_fragment_shader);
+    if (!shader_program) {
+        log_error("Could not load construct font shader program");
+        return NULL;
+    }
+
+    config = malloc(sizeof(struct text_configuration));
+    config->width = main_config->width;
+    config->height = main_config->height;
+    config->shader_program = shader_program;
+
+    return config;
+}
+
+void renderText(struct text_configuration *config, struct font *font,
         const char *text, GLfloat x, GLfloat y, GLfloat scale, float *color)
 {
     GLuint VAO, VBO;
@@ -103,13 +132,13 @@ void renderText(GLuint shader_program, int width, int height, struct font *font,
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArrayAPPLE(0);
 
-    glUseProgram(shader_program);
+    glUseProgram(config->shader_program);
 
     // Activate corresponding render state	
-    glUniform3f(glGetUniformLocation(shader_program, "textColor"),
+    glUniform3f(glGetUniformLocation(config->shader_program, "textColor"),
             color[0], color[1], color[2]);
-    glUniform1i(glGetUniformLocation(shader_program, "width"), width);
-    glUniform1i(glGetUniformLocation(shader_program, "height"), height);
+    glUniform1i(glGetUniformLocation(config->shader_program, "width"), config->width);
+    glUniform1i(glGetUniformLocation(config->shader_program, "height"), config->height);
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArrayAPPLE(VAO);
 
