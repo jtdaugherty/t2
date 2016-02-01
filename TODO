@@ -10,3 +10,5 @@
   GPU rather than per-pixel, per-sample scene-building
 - Make it possible to batch-process sample ranges in a single GPU pass
   (and to configure the batch size)
+- Use union type for shapes rather than having a separate array for each
+  shape type in the scene description
