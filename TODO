@@ -12,3 +12,4 @@
   (and to configure the batch size)
 - Use union type for shapes rather than having a separate array for each
   shape type in the scene description
+- Image output capability (keypress -> write image)
