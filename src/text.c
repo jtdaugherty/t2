@@ -115,23 +115,23 @@ struct text_configuration* initializeText(struct configuration *main_config)
     config->height = main_config->height;
     config->shader_program = shader_program;
 
-    return config;
-}
+    glGenVertexArraysAPPLE(1, &config->vao);
+    glGenBuffers(1, &config->vbo);
 
-void renderText(struct text_configuration *config, struct font *font,
-        const char *text, GLfloat x, GLfloat y, GLfloat scale, float *color)
-{
-    GLuint VAO, VBO;
-    glGenVertexArraysAPPLE(1, &VAO);
-    glGenBuffers(1, &VBO);
-    glBindVertexArrayAPPLE(VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBindVertexArrayAPPLE(config->vao);
+    glBindBuffer(GL_ARRAY_BUFFER, config->vbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 6 * 4, NULL, GL_DYNAMIC_DRAW);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), 0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArrayAPPLE(0);
 
+    return config;
+}
+
+void renderText(struct text_configuration *config, struct font *font,
+        const char *text, GLfloat x, GLfloat y, GLfloat scale, float *color)
+{
     glUseProgram(config->shader_program);
 
     // Activate corresponding render state	
@@ -140,7 +140,7 @@ void renderText(struct text_configuration *config, struct font *font,
     glUniform1i(glGetUniformLocation(config->shader_program, "width"), config->width);
     glUniform1i(glGetUniformLocation(config->shader_program, "height"), config->height);
     glActiveTexture(GL_TEXTURE0);
-    glBindVertexArrayAPPLE(VAO);
+    glBindVertexArrayAPPLE(config->vao);
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -183,7 +183,7 @@ void renderText(struct text_configuration *config, struct font *font,
         glBindTexture(GL_TEXTURE_2D, ch.texture);
 
         // Update content of VBO memory
-        glBindBuffer(GL_ARRAY_BUFFER, VBO);
+        glBindBuffer(GL_ARRAY_BUFFER, config->vbo);
         glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices); 
         glBindBuffer(GL_ARRAY_BUFFER, 0);
 

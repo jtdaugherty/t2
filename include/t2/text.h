@@ -28,6 +28,7 @@ struct text_configuration {
     int width;
     int height;
     GLuint shader_program;
+    GLuint vao, vbo;
 };
 
 void logTextSystemInfo();
