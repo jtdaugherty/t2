@@ -270,6 +270,9 @@ int main(int argc, char **argv)
     /* Make the window's context current */
     glfwMakeContextCurrent(window);
 
+    /* Set swap interval */
+    glfwSwapInterval(1);
+
     /* OpenCL initialization */
 
     /* Choose an OpenCL platform and create a context */
@@ -383,8 +386,6 @@ int main(int argc, char **argv)
     }
 
     cl_uint maxSamples = config.sampleRoot * config.sampleRoot;
-
-    glfwSwapInterval(1);
 
     /* Set up OpenCL buffer reference to configuration */
     cl_mem configBuf = clCreateBuffer(context, CL_MEM_USE_HOST_PTR|CL_MEM_READ_ONLY,
