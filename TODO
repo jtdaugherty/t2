@@ -6,6 +6,9 @@
     scene accordingly
   - Requires host-side scene description and scene-building with single
     transfer to
+  - Requires object transformation support
+  - Need to pass a flag through to tell the renderer which object to
+    select, i.e., override material
 - Ambient occlusion
   - Requires hemispherical sample sets
   - Requires ambient occluding ambient light
