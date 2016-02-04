@@ -227,8 +227,7 @@ int main(int argc, char **argv)
     /* Create a windowed mode window and its OpenGL context */
     GLFWwindow* window = glfwCreateWindow(config.width, config.height, "t2",
                                           NULL, NULL);
-    if (!window)
-    {
+    if (!window) {
         log_error("Could not create GLFW window");
         glfwTerminate();
         return -1;
@@ -237,8 +236,7 @@ int main(int argc, char **argv)
     glfwMakeContextCurrent(window);
 
     GLenum err = glewInit();
-    if (GLEW_OK != err)
-    {
+    if (GLEW_OK != err) {
         /* Problem: glewInit failed, something is seriously wrong. */
         log_error("GLEW initialization failed: %s", glewGetErrorString(err));
         exit(1);
