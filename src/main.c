@@ -93,7 +93,6 @@ int setup_samples(struct sample_data *s, int sampleRoot, struct configuration *c
     }
 
     log_info("Generating %d samples per pixel", sampleRoot * sampleRoot);
-    log_info("Sample data:");
     log_info("  Types: square, disk");
     log_info("  %ld sample sets per type", s->numSampleSets);
     log_info("  %ld bytes memory allocated per type", samplesSize);
