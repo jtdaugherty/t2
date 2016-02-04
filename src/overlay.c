@@ -49,7 +49,7 @@ void render_overlay(struct configuration *config, struct state *programState)
 
     char frameTimeMsg[64];
     if (programState->last_frame_time != -1) {
-        len = snprintf(frameTimeMsg, sizeof(frameTimeMsg), "Frame time: %f sec",
+        len = snprintf(frameTimeMsg, sizeof(frameTimeMsg), "Frame time: %.3f sec",
                 programState->last_frame_time);
         renderText(text_config, &stats_font, frameTimeMsg, len, left, bottom + ROWS(1),
                 1, overlay_text_color);
