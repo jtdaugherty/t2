@@ -385,8 +385,6 @@ int main(int argc, char **argv)
         exit(1);
     }
 
-    cl_uint maxSamples = config.sampleRoot * config.sampleRoot;
-
     /* Set up OpenCL buffer reference to configuration */
     cl_mem configBuf = clCreateBuffer(context, CL_MEM_USE_HOST_PTR|CL_MEM_READ_ONLY,
             sizeof(struct configuration), &config, &ret);
@@ -410,10 +408,10 @@ int main(int argc, char **argv)
     // Create a sample index indirection layer so we can randomize
     // sample index selection to avoid visual artifacts from processing
     // the samples in spatial order.
-    int sampleIndices[maxSamples];
-    for (int i = 0; i < maxSamples; i++)
+    int sampleIndices[config.sampleRoot * config.sampleRoot];
+    for (int i = 0; i < config.sampleRoot * config.sampleRoot; i++)
         sampleIndices[i] = i;
-    shuffle(sampleIndices, maxSamples);
+    shuffle(sampleIndices, config.sampleRoot * config.sampleRoot);
 
     struct timeval start;
 
@@ -422,7 +420,7 @@ int main(int argc, char **argv)
 
     while (!glfwWindowShouldClose(window))
     {
-        if (programState.sampleIdx < maxSamples) {
+        if (programState.sampleIdx < (config.sampleRoot * config.sampleRoot)) {
             if (programState.sampleIdx == 0)
                 gettimeofday(&start, NULL);
 
@@ -502,7 +500,7 @@ int main(int argc, char **argv)
 
             programState.sampleIdx++;
 
-            if (programState.sampleIdx == maxSamples) {
+            if (programState.sampleIdx == config.sampleRoot * config.sampleRoot) {
                 struct timeval stop;
                 gettimeofday(&stop, NULL);
                 struct timeval diff;
@@ -543,8 +541,8 @@ int main(int argc, char **argv)
 
         if (show_overlay) {
             int len = snprintf(msg, sizeof(msg), "%d/%d sample%s | radius %f | depth %d",
-                    programState.sampleIdx, maxSamples,
-                    (maxSamples == 1 ? "" : "s"),
+                    programState.sampleIdx, config.sampleRoot * config.sampleRoot,
+                    (config.sampleRoot == 1 ? "" : "s"),
                     programState.lens_radius,
                     config.traceDepth);
             renderText(text_config, &stats_font, msg, len, 5, 7, 1, white);
