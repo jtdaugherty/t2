@@ -1,5 +1,3 @@
-- Runtime changes in sample count (w/regeneration of sample values)
-  - Requires free/malloc of sample data with corresponding latency
 - Acceleration: regular grids?
 - Make text overlay nicer (alpha-blended background)
 - Object picking for fun and profit:

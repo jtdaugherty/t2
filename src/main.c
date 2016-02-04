@@ -42,8 +42,23 @@ struct configuration config = {
     .logLevel = LOG_INFO
 };
 
+struct sample_data {
+    cl_float *squareSamples;
+    cl_mem squareSampleBuf;
+
+    cl_float *diskSamples;
+    cl_mem diskSampleBuf;
+
+    size_t numSampleSets;
+    int *sampleIndices;
+};
+
+struct sample_data samples = { NULL, NULL, NULL, NULL, 0 };
+
 /* For logging.h to get access to the global log level */
 int *global_log_level = &config.logLevel;
+
+cl_context context = NULL;
 
 /* Last known mouse cursor position for computing deltas during mouse
 movement */
@@ -73,6 +88,93 @@ void timevalDiff(struct timeval *start,
         diff->tv_usec -= 1000000L;
         diff->tv_sec += 1;
     }
+}
+
+int setup_samples(struct sample_data *s, int sampleRoot, struct configuration *cfg, cl_context context)
+{
+    int ret;
+
+    s->numSampleSets = cfg->width * 23.5;
+    size_t samplesSize = sizeof(cl_float) * sampleRoot * sampleRoot * 2 *
+        s->numSampleSets;
+
+    if (s->squareSamples) {
+        log_info("Freeing old square samples");
+        free(s->squareSamples);
+        clReleaseMemObject(s->squareSampleBuf);
+    }
+
+    if (s->diskSamples) {
+        log_info("Freeing old disk samples");
+        free(s->diskSamples);
+        clReleaseMemObject(s->diskSampleBuf);
+    }
+
+    if (s->sampleIndices) {
+        free(s->sampleIndices);
+    }
+
+    log_info("Generating %d samples per pixel", sampleRoot * sampleRoot);
+    log_info("Sample data:");
+    log_info("  Types: square, disk");
+    log_info("  %ld sample sets per type", s->numSampleSets);
+    log_info("  %ld bytes memory allocated per type", samplesSize);
+
+    log_info("Generating square samples...");
+    /* Allocate and populate square sample sets */
+    s->squareSamples = malloc(samplesSize);
+    if (!s->squareSamples) {
+        log_error("Could not allocate %ld bytes of memory for square samples", samplesSize);
+        return 1;
+    }
+
+    for (int i = 0; i < s->numSampleSets; i++) {
+        // Offset in number of floats for this set
+        size_t offset = i * (2 * sampleRoot * sampleRoot);
+        generateJitteredSampleSet(s->squareSamples + offset, sampleRoot, NULL);
+    }
+    log_info("Done generating square samples.");
+
+    /* Set up OpenCL buffer reference to square sample memory */
+    s->squareSampleBuf = clCreateBuffer(context, CL_MEM_USE_HOST_PTR|CL_MEM_READ_ONLY,
+            samplesSize, s->squareSamples, &ret);
+    if (ret) {
+        log_error("Could not create square sample buffer, ret %d", ret);
+        return 1;
+    }
+
+    log_info("Generating disk samples...");
+    /* Allocate and populate disk sample sets */
+    s->diskSamples = malloc(samplesSize);
+    if (!s->diskSamples) {
+        log_error("Could not allocate %ld bytes of memory for disk samples", samplesSize);
+        return 1;
+    }
+
+    for (int i = 0; i < s->numSampleSets; i++) {
+        // Offset in number of floats for this set
+        size_t offset = i * (2 * sampleRoot * sampleRoot);
+        generateJitteredSampleSet(s->diskSamples + offset, sampleRoot, mapToUnitDisk);
+    }
+    log_info("Done generating disk samples.");
+
+    /* Set up OpenCL buffer reference to disk sample memory */
+    s->diskSampleBuf = clCreateBuffer(context, CL_MEM_USE_HOST_PTR|CL_MEM_READ_ONLY,
+            samplesSize, s->diskSamples, &ret);
+    if (ret) {
+        log_error("Could not create square sample buffer, ret %d", ret);
+        return 1;
+    }
+
+    // Create a sample index indirection layer so we can randomize
+    // sample index selection to avoid visual artifacts from processing
+    // the samples in spatial order.
+    s->sampleIndices = malloc(sizeof(int) * sampleRoot * sampleRoot);
+    for (int i = 0; i < sampleRoot * sampleRoot; i++)
+        s->sampleIndices[i] = i;
+    shuffle(s->sampleIndices, sampleRoot * sampleRoot);
+
+    return 0;
 }
 
 static inline void rotateHeading(cl_float angle)
@@ -130,6 +232,28 @@ static void key_callback(GLFWwindow* window, int key, int scancode,
 #define DECREASE_RADIUS (PRESS(GLFW_KEY_R) && (!SHIFT))
 #define INCREASE_RADIUS (PRESS(GLFW_KEY_R) && SHIFT)
 #define TOGGLE_OVERLAY  (PRESS(GLFW_KEY_O))
+#define DECREASE_SAMPLE_ROOT (PRESS(GLFW_KEY_T) && (!SHIFT))
+#define INCREASE_SAMPLE_ROOT (PRESS(GLFW_KEY_T) && SHIFT)
+
+    if (DECREASE_SAMPLE_ROOT && config.sampleRoot > 1) {
+        config.sampleRoot--;
+        int ret = setup_samples(&samples, config.sampleRoot, &config, context);
+        if (ret) {
+            log_error("Could not set up samples");
+            exit(1);
+        }
+        restartRendering();
+    }
+
+    if (INCREASE_SAMPLE_ROOT && config.sampleRoot < MAX_SAMPLE_ROOT)  {
+        config.sampleRoot++;
+        int ret = setup_samples(&samples, config.sampleRoot, &config, context);
+        if (ret) {
+            log_error("Could not set up samples");
+            exit(1);
+        }
+        restartRendering();
+    }
 
     if (TOGGLE_OVERLAY) {
         programState.show_overlay = !programState.show_overlay;
@@ -259,7 +383,7 @@ int main(int argc, char **argv)
     /* Choose an OpenCL platform and create a context */
     platform_id = choosePlatform();
     logPlatformInfo(platform_id);
-    cl_context context = createOpenCLContext();
+    context = createOpenCLContext();
 
     /* Choose an OpenCL device */
     cl_device_id device_id = chooseOpenCLDevice(platform_id, context);
@@ -310,59 +434,10 @@ int main(int argc, char **argv)
         exit(1);
     }
 
-    size_t numSampleSets = config.width * 23.5;
-    size_t samplesSize = sizeof(cl_float) * config.sampleRoot * config.sampleRoot * 2 *
-        numSampleSets;
-
-    log_info("Generating %d samples per pixel", config.sampleRoot * config.sampleRoot);
-    log_info("Sample data:");
-    log_info("  Types: square, disk");
-    log_info("  %ld sample sets per type", numSampleSets);
-    log_info("  %ld bytes memory allocated per type", samplesSize);
-
-    log_info("Generating square samples...");
-    /* Allocate and populate square sample sets */
-    cl_float *squareSamples = malloc(samplesSize);
-    if (!squareSamples) {
-        log_error("Could not allocate %ld bytes of memory for square samples", samplesSize);
-        exit(1);
-    }
-
-    for (int i = 0; i < numSampleSets; i++) {
-        // Offset in number of floats for this set
-        size_t offset = i * (2 * config.sampleRoot * config.sampleRoot);
-        generateJitteredSampleSet(squareSamples + offset, config.sampleRoot, NULL);
-    }
-    log_info("Done generating square samples.");
-
-    /* Set up OpenCL buffer reference to square sample memory */
-    cl_mem squareSampleBuf = clCreateBuffer(context, CL_MEM_USE_HOST_PTR|CL_MEM_READ_ONLY,
-            samplesSize, squareSamples, &ret);
+    // Perform initial sample allocation/generation
+    ret = setup_samples(&samples, config.sampleRoot, &config, context);
     if (ret) {
-        log_error("Could not create square sample buffer, ret %d", ret);
-        exit(1);
-    }
-
-    log_info("Generating disk samples...");
-    /* Allocate and populate disk sample sets */
-    cl_float *diskSamples = malloc(samplesSize);
-    if (!diskSamples) {
-        log_error("Could not allocate %ld bytes of memory for disk samples", samplesSize);
-        exit(1);
-    }
-
-    for (int i = 0; i < numSampleSets; i++) {
-        // Offset in number of floats for this set
-        size_t offset = i * (2 * config.sampleRoot * config.sampleRoot);
-        generateJitteredSampleSet(diskSamples + offset, config.sampleRoot, mapToUnitDisk);
-    }
-    log_info("Done generating disk samples.");
-
-    /* Set up OpenCL buffer reference to disk sample memory */
-    cl_mem diskSampleBuf = clCreateBuffer(context, CL_MEM_USE_HOST_PTR|CL_MEM_READ_ONLY,
-            samplesSize, diskSamples, &ret);
-    if (ret) {
-        log_error("Could not create square sample buffer, ret %d", ret);
+        log_error("Could not set up samples");
         exit(1);
     }
 
@@ -381,14 +456,6 @@ int main(int argc, char **argv)
     }
 
     log_info("Ready.");
-
-    // Create a sample index indirection layer so we can randomize
-    // sample index selection to avoid visual artifacts from processing
-    // the samples in spatial order.
-    int sampleIndices[config.sampleRoot * config.sampleRoot];
-    for (int i = 0; i < config.sampleRoot * config.sampleRoot; i++)
-        sampleIndices[i] = i;
-    shuffle(sampleIndices, config.sampleRoot * config.sampleRoot);
 
     struct timeval start;
 
@@ -411,19 +478,19 @@ int main(int argc, char **argv)
             copyTexture(res.fbo, res.writeTexture, res.readTexture,
                     config.width, config.height);
 
-            int thisSampleIdx = sampleIndices[programState.sampleIdx];
+            int thisSampleIdx = samples.sampleIndices[programState.sampleIdx];
 
             /* Set OpenCL Kernel Parameters */
             ret = 0;
             ret |= clSetKernelArg(kernel, 0,    sizeof(cl_mem),      &configBuf);
             ret |= clSetKernelArg(kernel, 1,    sizeof(cl_mem),      &texmemRead);
             ret |= clSetKernelArg(kernel, 2,    sizeof(cl_mem),      &texmemWrite);
-            ret |= clSetKernelArg(kernel, 3,    sizeof(cl_mem),      &squareSampleBuf);
-            ret |= clSetKernelArg(kernel, 4,    sizeof(cl_mem),      &diskSampleBuf);
+            ret |= clSetKernelArg(kernel, 3,    sizeof(cl_mem),      &samples.squareSampleBuf);
+            ret |= clSetKernelArg(kernel, 4,    sizeof(cl_mem),      &samples.diskSampleBuf);
             ret |= clSetKernelArg(kernel, 5,    sizeof(programState.position),    programState.position);
             ret |= clSetKernelArg(kernel, 6,    sizeof(programState.heading),     programState.heading);
             ret |= clSetKernelArg(kernel, 7,    sizeof(programState.lens_radius), &programState.lens_radius);
-            ret |= clSetKernelArg(kernel, 8,    sizeof(cl_int),      &numSampleSets);
+            ret |= clSetKernelArg(kernel, 8,    sizeof(cl_int),      &samples.numSampleSets);
             ret |= clSetKernelArg(kernel, 9,    sizeof(thisSampleIdx),   &thisSampleIdx);
             ret |= clSetKernelArg(kernel, 10,   sizeof(programState.sampleIdx),   &programState.sampleIdx);
 
