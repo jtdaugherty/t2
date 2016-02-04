@@ -2,49 +2,34 @@
 #include <GL/glew.h>
 #include <OpenGL/gl.h>
 #include <GLFW/glfw3.h>
+
 #include <math.h>
 #include <sys/time.h>
 
-#include <ft2build.h>
-#include FT_FREETYPE_H
-
-#include <t2/version.h>
-#include <t2/logging.h>
-#include <t2/info.h>
-#include <t2/platform.h>
+#include <t2/args.h>
+#include <t2/config.h>
 #include <t2/device.h>
-#include <t2/util.h>
+#include <t2/info.h>
+#include <t2/logging.h>
 #include <t2/mathutil.h>
 #include <t2/opencl_setup.h>
-#include <t2/shader_setup.h>
-#include <t2/texture.h>
+#include <t2/overlay.h>
+#include <t2/platform.h>
 #include <t2/samplers.h>
-#include <t2/config.h>
-#include <t2/args.h>
+#include <t2/shader_setup.h>
+#include <t2/state.h>
 #include <t2/text.h>
-
-#define STATS_FONT_FILENAME "fonts/InputMono-Regular.ttf"
-
-struct state {
-    // Position vector
-    cl_float position[3];
-
-    // Heading vector
-    cl_float heading[3];
-
-    // Camera lens radius
-    cl_float lens_radius;
-
-    // Current sample index being rendered
-    cl_uint sampleIdx;
-};
+#include <t2/texture.h>
+#include <t2/util.h>
+#include <t2/version.h>
 
 /* Initial renderer state */
 struct state programState = {
     .position = { 0, 1.0, -5.0 },
     .heading = { 0.0, 0.0, 1.0 },
     .lens_radius = 0.07,
-    .sampleIdx = 0
+    .sampleIdx = 0,
+    .show_overlay = 1
 };
 
 /* Default configuration */
@@ -58,9 +43,6 @@ struct configuration config = {
 
 /* For logging.h to get access to the global log level */
 int *global_log_level = &config.logLevel;
-
-/* Whether to show the overlay */
-int show_overlay = 1;
 
 /* Last known mouse cursor position for computing deltas during mouse
 movement */
@@ -149,8 +131,8 @@ static void key_callback(GLFWwindow* window, int key, int scancode,
 #define TOGGLE_OVERLAY  (PRESS(GLFW_KEY_O))
 
     if (TOGGLE_OVERLAY) {
-        show_overlay = !show_overlay;
-        log_info("Toggled overlay state, %d", show_overlay);
+        programState.show_overlay = !programState.show_overlay;
+        log_info("Toggled overlay state, %d", programState.show_overlay);
     }
 
     if (QUIT)
@@ -393,15 +375,11 @@ int main(int argc, char **argv)
         exit(1);
     }
 
-    struct text_configuration *text_config = initializeText(&config);
-
-    struct font stats_font;
-    ret = loadFont(STATS_FONT_FILENAME, &stats_font);
+    ret = initialize_overlay(&config);
     if (ret) {
-        log_error("Could not load font, exiting");
+        log_error("Could not initialize overlay");
         exit(1);
-    } else
-        log_info("Loaded stats font %s", STATS_FONT_FILENAME);
+    }
 
     log_info("Ready.");
 
@@ -414,9 +392,6 @@ int main(int argc, char **argv)
     shuffle(sampleIndices, config.sampleRoot * config.sampleRoot);
 
     struct timeval start;
-
-    float white[3] = { 1, 1, 1 };
-    char msg[64];
 
     while (!glfwWindowShouldClose(window))
     {
@@ -539,14 +514,8 @@ int main(int argc, char **argv)
 
         glDisableVertexAttribArray(res.position_attribute);
 
-        if (show_overlay) {
-            int len = snprintf(msg, sizeof(msg), "%d/%d sample%s | radius %f | depth %d",
-                    programState.sampleIdx, config.sampleRoot * config.sampleRoot,
-                    (config.sampleRoot == 1 ? "" : "s"),
-                    programState.lens_radius,
-                    config.traceDepth);
-            renderText(text_config, &stats_font, msg, len, 5, 7, 1, white);
-        }
+        if (programState.show_overlay)
+            render_overlay(&config, &programState);
 
         /* Swap front and back buffers */
         glfwSwapBuffers(window);

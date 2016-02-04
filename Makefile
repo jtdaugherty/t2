@@ -28,7 +28,8 @@ OBJS = \
 	   src/samplers.o \
 	   src/logging.o \
 	   src/args.o \
-	   src/text.o
+	   src/text.o \
+	   src/overlay.o
 
 $(PROGNAME): $(OBJS)
 	gcc $(CFLAGS) -o $(PROGNAME) $(OBJS) $(LIBS)
