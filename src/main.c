@@ -18,10 +18,8 @@
 #include <t2/samplers.h>
 #include <t2/shader_setup.h>
 #include <t2/state.h>
-#include <t2/text.h>
 #include <t2/texture.h>
 #include <t2/util.h>
-#include <t2/version.h>
 
 /* Initial renderer state */
 struct state programState = {
@@ -293,20 +291,6 @@ static void key_callback(GLFWwindow* window, int key, int scancode,
         programState.position[2] += headingZ;
         restartRendering();
     }
-}
-
-void logVersionInfo()
-{
-    int maj, min, rev;
-
-    log_info("t2 version %s (commit %s)", T2_VERSION, T2_COMMIT);
-
-    glfwGetVersion(&maj, &min, &rev);
-    log_info("GLFW version: %d.%d.%d", maj, min, rev);
-
-    log_info("GLEW version: %s", glewGetString(GLEW_VERSION));
-
-    logTextSystemInfo();
 }
 
 int main(int argc, char **argv)

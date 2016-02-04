@@ -1,8 +1,12 @@
 
 #include <string.h>
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
 
 #include <t2/info.h>
 #include <t2/logging.h>
+#include <t2/version.h>
+#include <t2/text.h>
 
 cl_int logDeviceInfo(cl_device_id device_id) {
     char extension_list[1024];
@@ -64,4 +68,18 @@ cl_int logPlatformInfo(cl_platform_id platform_id) {
     log_info("  Profile: %s", platform_profile);
     log_info("  Version: %s", platform_version);
     return 0;
+}
+
+void logVersionInfo()
+{
+    int maj, min, rev;
+
+    log_info("t2 version %s (commit %s)", T2_VERSION, T2_COMMIT);
+
+    glfwGetVersion(&maj, &min, &rev);
+    log_info("GLFW version: %d.%d.%d", maj, min, rev);
+
+    log_info("GLEW version: %s", glewGetString(GLEW_VERSION));
+
+    logTextSystemInfo();
 }

@@ -6,5 +6,6 @@
 
 cl_int logDeviceInfo(cl_device_id device_id);
 cl_int logPlatformInfo(cl_platform_id platform_id);
+void logVersionInfo();
 
 #endif
