@@ -4,9 +4,7 @@
 
 #include <t2/config.h>
 #include <t2/logging.h>
-
-/* Let's be reasonable. */
-#define MAX_SAMPLE_ROOT 32
+#include <t2/samplers.h>
 
 void usage(char *progname, struct configuration *config)
 {
