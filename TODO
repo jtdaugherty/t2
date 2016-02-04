@@ -16,6 +16,5 @@
 - Consider increasing window height to make room for overlay (always on,
   image height + height of overlay)
 - Use consistent capitalization
-- Compute overlay line height from font rather than hard-coding
 - main(): do one GL acquire/release by allocating relevant GL objects
   adjacently

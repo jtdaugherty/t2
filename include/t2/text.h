@@ -22,6 +22,7 @@ struct character {
 
 struct font {
     struct character characters[FONT_NUM_CHARACTERS];
+    int pixel_height;
 };
 
 struct text_configuration {
@@ -33,7 +34,7 @@ struct text_configuration {
 
 void logTextSystemInfo();
 struct text_configuration* initializeText(struct configuration *main_config);
-int loadFont(const char *font_filename, struct font *f);
+int loadFont(const char *font_filename, struct font *f, int pixel_height);
 void renderText(struct text_configuration *config, struct font *font,
         const char *text, int len, GLfloat x, GLfloat y, GLfloat scale, float *color);
 

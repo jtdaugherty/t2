@@ -25,7 +25,7 @@ static int ensureFreetypeInitialized()
     return 0;
 }
 
-int loadFont(const char *font_filename, struct font *f)
+int loadFont(const char *font_filename, struct font *f, int pixel_height)
 {
     int ret;
     ensureFreetypeInitialized();
@@ -43,7 +43,7 @@ int loadFont(const char *font_filename, struct font *f)
 
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
-    FT_Set_Pixel_Sizes(face, 0, 18);
+    FT_Set_Pixel_Sizes(face, 0, pixel_height);
 
     // Load each character that we care about
     for (GLubyte c = 0; c < FONT_NUM_CHARACTERS; c++) {
@@ -84,6 +84,8 @@ int loadFont(const char *font_filename, struct font *f)
     }
 
     FT_Done_Face(face);
+
+    f->pixel_height = pixel_height;
 
     return 0;
 }
