@@ -23,7 +23,7 @@
 #include <t2/args.h>
 #include <t2/text.h>
 
-#define STATS_FONT_FILENAME        "fonts/InputMono-Regular.ttf"
+#define STATS_FONT_FILENAME "fonts/InputMono-Regular.ttf"
 
 struct state {
     // Position vector
