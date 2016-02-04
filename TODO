@@ -1,7 +1,7 @@
 - Runtime changes in sample count (w/regeneration of sample values)
   - Requires free/malloc of sample data with corresponding latency
 - Acceleration: regular grids?
-- Make text overlay nicer
+- Make text overlay nicer (alpha-blended background)
 - Object picking for fun and profit
 - Ambient occlusion
 - Triangle meshes
@@ -11,10 +11,21 @@
   GPU rather than per-pixel, per-sample scene-building
 - Make it possible to batch-process sample ranges in a single GPU pass
   (and to configure the batch size) and also investigate any performance
-  difference yielded by batching samples
+  difference yielded by batching samples. With a sufficiently large
+  batch size this might help reduce spatial jitter when a frame begins
+  rendering. But for slow-rendering scenes (e.g. path-traced scenes)
+  when a single sample rendering time is long enough, we might not
+  want to batch at all. Maybe this could be learned as the program
+  renders its first few frames: if the per-sample time is very low
+  (below some reasonable threshold) the batch size could be increased
+  until an optimal point is found, up to some limit (since we want to
+  render 25-30 real frames per second, so we need to figure out how many
+  samples we can render in 1/25th to 1/30th of a second).
 - Image output capability (keypress -> write image)
 - Consider increasing window height to make room for overlay (always on,
   image height + height of overlay)
 - Use consistent capitalization
 - main(): do one GL acquire/release by allocating relevant GL objects
   adjacently
+- Send program state to OpenCL via cl_mem rather than sending many state
+  fields as individual parameters
