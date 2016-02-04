@@ -29,7 +29,8 @@ struct state programState = {
     .heading = { 0.0, 0.0, 1.0 },
     .lens_radius = 0.07,
     .sampleIdx = 0,
-    .show_overlay = 1
+    .show_overlay = 1,
+    .last_frame_time = -1
 };
 
 /* Default configuration */
@@ -396,6 +397,8 @@ int main(int argc, char **argv)
     while (!glfwWindowShouldClose(window))
     {
         if (programState.sampleIdx < (config.sampleRoot * config.sampleRoot)) {
+            programState.last_frame_time = -1;
+
             if (programState.sampleIdx == 0)
                 gettimeofday(&start, NULL);
 
@@ -481,7 +484,7 @@ int main(int argc, char **argv)
                 struct timeval diff;
                 timevalDiff(&start, &stop, &diff);
                 float secs = ((float)diff.tv_sec) + ((float) diff.tv_usec / 1000000.0);
-                log_info("Frame time: %f sec", secs);
+                programState.last_frame_time = secs;
             }
         }
 

@@ -19,6 +19,9 @@ struct state {
 
     // Whether to render the overlay
     cl_uint show_overlay;
+
+    // The rendering time of the most recently completed frame
+    cl_float last_frame_time;
 };
 
 #endif
