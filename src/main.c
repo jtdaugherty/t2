@@ -70,26 +70,6 @@ static inline void restartRendering()
     programState.sampleIdx = 0;
 }
 
-void timevalDiff(struct timeval *start,
-                 struct timeval *stop,
-                 struct timeval *diff)
-{
-    if (stop->tv_sec == start->tv_sec + 1)
-        diff->tv_sec = 0;
-    else
-        diff->tv_sec = stop->tv_sec - start->tv_sec;
-
-    if (stop->tv_sec == start->tv_sec)
-        diff->tv_usec = stop->tv_usec - start->tv_usec;
-    else
-        diff->tv_usec = stop->tv_usec + (1000000L - start->tv_usec);
-
-    if (diff->tv_usec > 1000000L) {
-        diff->tv_usec -= 1000000L;
-        diff->tv_sec += 1;
-    }
-}
-
 int setup_samples(struct sample_data *s, int sampleRoot, struct configuration *cfg, cl_context context)
 {
     int ret;

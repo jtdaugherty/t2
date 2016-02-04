@@ -1,5 +1,6 @@
 
 #include <sys/stat.h>
+#include <sys/time.h>
 #include <stdio.h>
 
 #include <t2/util.h>
@@ -69,5 +70,25 @@ cl_program readAndBuildProgram(cl_context context, cl_device_id device_id, const
         return NULL;
     } else {
         return program;
+    }
+}
+
+void timevalDiff(struct timeval *start,
+                 struct timeval *stop,
+                 struct timeval *diff)
+{
+    if (stop->tv_sec == start->tv_sec + 1)
+        diff->tv_sec = 0;
+    else
+        diff->tv_sec = stop->tv_sec - start->tv_sec;
+
+    if (stop->tv_sec == start->tv_sec)
+        diff->tv_usec = stop->tv_usec - start->tv_usec;
+    else
+        diff->tv_usec = stop->tv_usec + (1000000L - start->tv_usec);
+
+    if (diff->tv_usec > 1000000L) {
+        diff->tv_usec -= 1000000L;
+        diff->tv_sec += 1;
     }
 }
