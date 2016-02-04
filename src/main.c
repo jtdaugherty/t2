@@ -222,7 +222,7 @@ static void key_callback(GLFWwindow* window, int key, int scancode,
         restartRendering();
     }
 
-    if (INCREASE_SAMPLE_ROOT && config.sampleRoot < MAX_SAMPLE_ROOT)  {
+    if (INCREASE_SAMPLE_ROOT && config.sampleRoot < MAX_SAMPLE_ROOT) {
         config.sampleRoot++;
         int ret = setup_samples(&samples, config.sampleRoot, &config, context);
         if (ret) {

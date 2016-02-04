@@ -8,7 +8,8 @@
 #include <t2/version.h>
 #include <t2/text.h>
 
-cl_int logDeviceInfo(cl_device_id device_id) {
+cl_int logDeviceInfo(cl_device_id device_id)
+{
     char extension_list[1024];
     cl_int ret = clGetDeviceInfo(device_id, CL_DEVICE_EXTENSIONS, 1024, extension_list, NULL);
     if (ret) {
@@ -47,7 +48,8 @@ cl_int logDeviceInfo(cl_device_id device_id) {
     return 0;
 }
 
-cl_int logPlatformInfo(cl_platform_id platform_id) {
+cl_int logPlatformInfo(cl_platform_id platform_id)
+{
     cl_int ret;
 
     char platform_profile[64];
