@@ -2,12 +2,20 @@
   - Requires free/malloc of sample data with corresponding latency
 - Acceleration: regular grids?
 - Make text overlay nicer (alpha-blended background)
-- Object picking for fun and profit
+- Object picking for fun and profit:
+  - live object transformations? select an object, use mouse and/or
+    keyboard to set transformation mode (scale/translate + axis), update
+    scene accordingly
+  - Requires host-side scene description and scene-building with single
+    transfer to
 - Ambient occlusion
+  - Requires hemispherical sample sets
+  - Requires ambient occluding ambient light
+- Refactor/tear down existing materials and lighting and replace with
+  book implementations
 - Triangle meshes
 - Path tracing w/environment lights, concave spheres
 - Area lighting
-- Host-side scene description and scene-building with single transfer to
   GPU rather than per-pixel, per-sample scene-building
 - Make it possible to batch-process sample ranges in a single GPU pass
   (and to configure the batch size) and also investigate any performance
@@ -29,3 +37,4 @@
   adjacently
 - Send program state to OpenCL via cl_mem rather than sending many state
   fields as individual parameters
+- Factor sampling setup out of main()?
