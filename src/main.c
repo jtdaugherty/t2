@@ -405,8 +405,8 @@ int main(int argc, char **argv)
     }
 
     /* Set up OpenCL buffer reference to configuration */
-    cl_mem configBuf = clCreateBuffer(context, CL_MEM_USE_HOST_PTR|CL_MEM_READ_ONLY,
-            sizeof(struct configuration), &config, &ret);
+    cl_mem configBuf = clCreateBuffer(context, CL_MEM_READ_ONLY,
+            sizeof(struct configuration), NULL, &ret);
     if (ret) {
         log_error("Could not create configuration buffer, ret %d", ret);
         exit(1);
