@@ -39,3 +39,5 @@
 - Send program state to OpenCL via cl_mem rather than sending many state
   fields as individual parameters
 - Factor sampling setup out of main()?
+- Save on memory copies: only write to OpenCL buffers when values change
+  (e.g. configBuf)
