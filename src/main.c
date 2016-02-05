@@ -430,17 +430,6 @@ int main(int argc, char **argv)
 
     struct timeval start;
 
-    ret  = clSetKernelArg(kernel, 0, sizeof(cl_mem), &configBuf);
-    ret |= clSetKernelArg(kernel, 1, sizeof(cl_mem), &stateBuf);
-    ret |= clSetKernelArg(kernel, 2, sizeof(cl_mem), &texmemRead);
-    ret |= clSetKernelArg(kernel, 3, sizeof(cl_mem), &texmemWrite);
-    ret |= clSetKernelArg(kernel, 4, sizeof(cl_mem), &samples.squareSampleBuf);
-    ret |= clSetKernelArg(kernel, 5, sizeof(cl_mem), &samples.diskSampleBuf);
-    if (ret) {
-        log_error("Could not set initial kernel arguments, ret %d", ret);
-        exit(1);
-    }
-
     while (!glfwWindowShouldClose(window))
     {
         if (programState.sampleNum < (config.sampleRoot * config.sampleRoot)) {
@@ -464,6 +453,12 @@ int main(int argc, char **argv)
 
             /* Set OpenCL Kernel Parameters */
             ret = 0;
+            ret  = clSetKernelArg(kernel, 0, sizeof(cl_mem),         &configBuf);
+            ret |= clSetKernelArg(kernel, 1, sizeof(cl_mem),         &stateBuf);
+            ret |= clSetKernelArg(kernel, 2, sizeof(cl_mem),         &texmemRead);
+            ret |= clSetKernelArg(kernel, 3, sizeof(cl_mem),         &texmemWrite);
+            ret |= clSetKernelArg(kernel, 4, sizeof(cl_mem),         &samples.squareSampleBuf);
+            ret |= clSetKernelArg(kernel, 5, sizeof(cl_mem),         &samples.diskSampleBuf);
             ret |= clSetKernelArg(kernel, 6, sizeof(cl_int),         &samples.numSampleSets);
             ret |= clSetKernelArg(kernel, 7, sizeof(thisSampleIdx),  &thisSampleIdx);
 
