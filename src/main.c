@@ -473,31 +473,16 @@ int main(int argc, char **argv)
                 exit(1);
             }
 
-            /* Update the configuration buffer */
+            /* Update the configuration and state buffers */
             ret = clEnqueueWriteBuffer(command_queue, configBuf, 1, 0, sizeof(struct configuration),
                     &config, 0, NULL, NULL);
-            if (ret) {
-                log_error("Could not enqueue config buffer update, ret %d", ret);
-                exit(1);
-            }
-
-            /* Update the state buffer */
-            ret = clEnqueueWriteBuffer(command_queue, stateBuf, 1, 0, sizeof(struct state),
+            ret |= clEnqueueWriteBuffer(command_queue, stateBuf, 1, 0, sizeof(struct state),
                     &programState, 0, NULL, NULL);
+            /* Acquire OpenGL objects */
+            ret |= clEnqueueAcquireGLObjects(command_queue, 1, &texmemRead, 0, NULL, NULL);
+            ret |= clEnqueueAcquireGLObjects(command_queue, 1, &texmemWrite, 0, NULL, NULL);
             if (ret) {
-                log_error("Could not enqueue state buffer update, ret %d", ret);
-                exit(1);
-            }
-
-            ret = clEnqueueAcquireGLObjects(command_queue, 1, &texmemRead, 0, NULL, NULL);
-            if (ret) {
-                log_error("Could not enqueue GL object acquisition, ret %d", ret);
-                exit(1);
-            }
-
-            ret = clEnqueueAcquireGLObjects(command_queue, 1, &texmemWrite, 0, NULL, NULL);
-            if (ret) {
-                log_error("Could not enqueue GL object acquisition, ret %d", ret);
+                log_error("Could not issue OpenCL commands, ret %d", ret);
                 exit(1);
             }
 
@@ -512,14 +497,9 @@ int main(int argc, char **argv)
 
             // Before returning the objects to OpenGL, we sync to make sure OpenCL is done.
             ret = clEnqueueReleaseGLObjects(command_queue, 1, &texmemRead, 0, NULL, NULL);
+            ret |= clEnqueueReleaseGLObjects(command_queue, 1, &texmemWrite, 0, NULL, NULL);
             if (ret) {
-                log_error("Could not enqueue GL object acquisition, ret %d", ret);
-                exit(1);
-            }
-
-            ret = clEnqueueReleaseGLObjects(command_queue, 1, &texmemWrite, 0, NULL, NULL);
-            if (ret) {
-                log_error("Could not enqueue GL object acquisition, ret %d", ret);
+                log_error("Could not enqueue GL object releases, ret %d", ret);
                 exit(1);
             }
 
