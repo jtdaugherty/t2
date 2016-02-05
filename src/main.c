@@ -430,10 +430,10 @@ int main(int argc, char **argv)
 
     struct timeval start;
 
-    ret  = clSetKernelArg(kernel, 0, sizeof(cl_mem),         &configBuf);
-    ret |= clSetKernelArg(kernel, 1, sizeof(cl_mem),         &stateBuf);
-    ret |= clSetKernelArg(kernel, 2, sizeof(cl_mem),         &texmemRead);
-    ret |= clSetKernelArg(kernel, 3, sizeof(cl_mem),         &texmemWrite);
+    ret  = clSetKernelArg(kernel, 0, sizeof(cl_mem), &configBuf);
+    ret |= clSetKernelArg(kernel, 1, sizeof(cl_mem), &stateBuf);
+    ret |= clSetKernelArg(kernel, 2, sizeof(cl_mem), &texmemRead);
+    ret |= clSetKernelArg(kernel, 3, sizeof(cl_mem), &texmemWrite);
 
     if (ret) {
         log_error("Could not set kernel argument, ret %d", ret);
