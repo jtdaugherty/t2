@@ -429,6 +429,7 @@ int main(int argc, char **argv)
     log_info("Ready.");
 
     struct timeval start;
+    size_t global_work_size[2];
 
     ret  = clSetKernelArg(kernel, 0, sizeof(cl_mem), &configBuf);
     ret |= clSetKernelArg(kernel, 1, sizeof(cl_mem), &stateBuf);
@@ -487,7 +488,8 @@ int main(int argc, char **argv)
             }
 
             /* Execute OpenCL Kernel */
-            size_t global_work_size[2] = { config.width, config.height };
+            global_work_size[0] = config.width;
+            global_work_size[1] = config.height;
             ret = clEnqueueNDRangeKernel(command_queue, kernel, 2, NULL, global_work_size,
                     NULL, 0, NULL, NULL);
             if (ret) {
