@@ -2,26 +2,26 @@
 #ifndef T2_STATE_H
 #define T2_STATE_H
 
+#ifndef __OPENCL_C_VERSION__
 #include <t2/opencl_setup.h>
+#endif
 
 struct state {
-    // Position vector
-    cl_float position[3];
-
-    // Heading vector
-    cl_float heading[3];
-
-    // Camera lens radius
+#ifdef __OPENCL_C_VERSION__
+    float3 position;
+    float3 heading;
+    float lens_radius;
+    uint sampleNum;
+    uint show_overlay;
+    float last_frame_time;
+#else
+    cl_float3 position;
+    cl_float3 heading;
     cl_float lens_radius;
-
-    // Current sample index being rendered
-    cl_uint sampleIdx;
-
-    // Whether to render the overlay
+    cl_uint sampleNum;
     cl_uint show_overlay;
-
-    // The rendering time of the most recently completed frame
     cl_float last_frame_time;
+#endif
 };
 
 #endif

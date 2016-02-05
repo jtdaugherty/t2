@@ -23,10 +23,10 @@
 
 /* Initial renderer state */
 struct state programState = {
-    .position = { 0, 1.0, -5.0 },
-    .heading = { 0.0, 0.0, 1.0 },
+    .position = { { 0, 1.0, -5.0 } },
+    .heading = { { 0.0, 0.0, 1.0 } },
     .lens_radius = 0.07,
-    .sampleIdx = 0,
+    .sampleNum = 0,
     .show_overlay = 1,
     .last_frame_time = -1
 };
@@ -65,7 +65,7 @@ static double cursorY;
 
 static inline void restartRendering()
 {
-    programState.sampleIdx = 0;
+    programState.sampleNum = 0;
 }
 
 int setup_samples(struct sample_data *s, int sampleRoot, struct configuration *cfg, cl_context context)
@@ -156,12 +156,12 @@ int setup_samples(struct sample_data *s, int sampleRoot, struct configuration *c
 
 static inline void rotateHeading(cl_float angle)
 {
-    programState.heading[0] = cos(angle) * programState.heading[0] -
-                              sin(angle) * programState.heading[2];
-    programState.heading[2] = sin(angle) * programState.heading[0] +
-                              cos(angle) * programState.heading[2];
+    programState.heading.x = cos(angle) * programState.heading.x -
+                             sin(angle) * programState.heading.z;
+    programState.heading.z = sin(angle) * programState.heading.x +
+                             cos(angle) * programState.heading.z;
 
-    normalize(programState.heading);
+    normalize(&programState.heading);
 }
 
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
@@ -266,28 +266,28 @@ static void key_callback(GLFWwindow* window, int key, int scancode,
     float headingZ = 0.0;
 
     if (MOVE_FORWARD) {
-        headingX = vel * programState.heading[0];
-        headingZ = vel * programState.heading[2];
+        headingX = vel * programState.heading.x;
+        headingZ = vel * programState.heading.z;
     }
 
     if (MOVE_LEFT) {
-        headingX = -1 * vel * programState.heading[0];
-        headingZ = -1 * vel * programState.heading[2];
+        headingX = -1 * vel * programState.heading.x;
+        headingZ = -1 * vel * programState.heading.z;
     }
 
     if (MOVE_RIGHT) {
-        headingX = -1 * vel * programState.heading[2];
-        headingZ = vel * programState.heading[0];
+        headingX = -1 * vel * programState.heading.z;
+        headingZ = vel * programState.heading.x;
     }
 
     if (MOVE_BACKWARD) {
-        headingX = vel * programState.heading[2];
-        headingZ = -1 * vel * programState.heading[0];
+        headingX = vel * programState.heading.z;
+        headingZ = -1 * vel * programState.heading.x;
     }
 
     if (headingX != 0 || headingZ != 0) {
-        programState.position[0] += headingX;
-        programState.position[2] += headingZ;
+        programState.position.x += headingX;
+        programState.position.z += headingZ;
         restartRendering();
     }
 }
@@ -412,6 +412,14 @@ int main(int argc, char **argv)
         exit(1);
     }
 
+    /* Set up OpenCL buffer for program state */
+    cl_mem stateBuf = clCreateBuffer(context, CL_MEM_READ_ONLY,
+            sizeof(struct state), NULL, &ret);
+    if (ret) {
+        log_error("Could not create configuration buffer, ret %d", ret);
+        exit(1);
+    }
+
     ret = initialize_overlay(&config);
     if (ret) {
         log_error("Could not initialize overlay");
@@ -422,12 +430,23 @@ int main(int argc, char **argv)
 
     struct timeval start;
 
+    ret  = clSetKernelArg(kernel, 0, sizeof(cl_mem), &configBuf);
+    ret |= clSetKernelArg(kernel, 1, sizeof(cl_mem), &stateBuf);
+    ret |= clSetKernelArg(kernel, 2, sizeof(cl_mem), &texmemRead);
+    ret |= clSetKernelArg(kernel, 3, sizeof(cl_mem), &texmemWrite);
+    ret |= clSetKernelArg(kernel, 4, sizeof(cl_mem), &samples.squareSampleBuf);
+    ret |= clSetKernelArg(kernel, 5, sizeof(cl_mem), &samples.diskSampleBuf);
+    if (ret) {
+        log_error("Could not set initial kernel arguments, ret %d", ret);
+        exit(1);
+    }
+
     while (!glfwWindowShouldClose(window))
     {
-        if (programState.sampleIdx < (config.sampleRoot * config.sampleRoot)) {
+        if (programState.sampleNum < (config.sampleRoot * config.sampleRoot)) {
             programState.last_frame_time = -1;
 
-            if (programState.sampleIdx == 0)
+            if (programState.sampleNum == 0)
                 gettimeofday(&start, NULL);
 
             /* Before we begin collecting a new sample, copy the old
@@ -441,21 +460,12 @@ int main(int argc, char **argv)
             copyTexture(res.fbo, res.writeTexture, res.readTexture,
                     config.width, config.height);
 
-            int thisSampleIdx = samples.sampleIndices[programState.sampleIdx];
+            int thisSampleIdx = samples.sampleIndices[programState.sampleNum];
 
             /* Set OpenCL Kernel Parameters */
             ret = 0;
-            ret |= clSetKernelArg(kernel, 0,    sizeof(cl_mem),      &configBuf);
-            ret |= clSetKernelArg(kernel, 1,    sizeof(cl_mem),      &texmemRead);
-            ret |= clSetKernelArg(kernel, 2,    sizeof(cl_mem),      &texmemWrite);
-            ret |= clSetKernelArg(kernel, 3,    sizeof(cl_mem),      &samples.squareSampleBuf);
-            ret |= clSetKernelArg(kernel, 4,    sizeof(cl_mem),      &samples.diskSampleBuf);
-            ret |= clSetKernelArg(kernel, 5,    sizeof(programState.position),    programState.position);
-            ret |= clSetKernelArg(kernel, 6,    sizeof(programState.heading),     programState.heading);
-            ret |= clSetKernelArg(kernel, 7,    sizeof(programState.lens_radius), &programState.lens_radius);
-            ret |= clSetKernelArg(kernel, 8,    sizeof(cl_int),      &samples.numSampleSets);
-            ret |= clSetKernelArg(kernel, 9,    sizeof(thisSampleIdx),   &thisSampleIdx);
-            ret |= clSetKernelArg(kernel, 10,   sizeof(programState.sampleIdx),   &programState.sampleIdx);
+            ret |= clSetKernelArg(kernel, 6, sizeof(cl_int),         &samples.numSampleSets);
+            ret |= clSetKernelArg(kernel, 7, sizeof(thisSampleIdx),  &thisSampleIdx);
 
             if (ret) {
                 log_error("Could not set kernel argument, ret %d", ret);
@@ -467,6 +477,14 @@ int main(int argc, char **argv)
                     &config, 0, NULL, NULL);
             if (ret) {
                 log_error("Could not enqueue config buffer update, ret %d", ret);
+                exit(1);
+            }
+
+            /* Update the state buffer */
+            ret = clEnqueueWriteBuffer(command_queue, stateBuf, 1, 0, sizeof(struct state),
+                    &programState, 0, NULL, NULL);
+            if (ret) {
+                log_error("Could not enqueue state buffer update, ret %d", ret);
                 exit(1);
             }
 
@@ -504,9 +522,9 @@ int main(int argc, char **argv)
                 exit(1);
             }
 
-            programState.sampleIdx++;
+            programState.sampleNum++;
 
-            if (programState.sampleIdx == config.sampleRoot * config.sampleRoot) {
+            if (programState.sampleNum == config.sampleRoot * config.sampleRoot) {
                 struct timeval stop;
                 gettimeofday(&stop, NULL);
                 struct timeval diff;

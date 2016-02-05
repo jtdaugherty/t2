@@ -52,7 +52,7 @@ cl_program readAndBuildProgram(cl_context context, cl_device_id device_id, const
     }
 
     /* Build Kernel Program */
-    ret = clBuildProgram(program, 1, &device_id, "-Werror -Icl", NULL, NULL);
+    ret = clBuildProgram(program, 1, &device_id, "-Werror -Icl -Iinclude", NULL, NULL);
     if (ret) {
         log_error("Error building %s", path);
 
