@@ -28,8 +28,6 @@
   image height + height of overlay)
 - main(): do one GL acquire/release by allocating relevant GL objects
   adjacently
-- Save on memory copies: only write to OpenCL buffers when values change
-  (e.g. configBuf)
 
 Other:
 - Path tracing w/environment lights, concave spheres
