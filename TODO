@@ -1,4 +1,6 @@
 - Photon mapping?
+- Only allocate more samples when increasing the root; when decreasing,
+  just use the same sample sets
 - Make text overlay nicer (alpha-blended background)
 - Object picking for fun and profit:
   - live object transformations? select an object, use mouse and/or
