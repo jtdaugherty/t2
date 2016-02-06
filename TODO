@@ -1,23 +1,14 @@
-- Acceleration: regular grids?
+- Photon mapping?
 - Make text overlay nicer (alpha-blended background)
 - Object picking for fun and profit:
   - live object transformations? select an object, use mouse and/or
     keyboard to set transformation mode (scale/translate + axis), update
     scene accordingly
   - Requires host-side scene description and scene-building with single
-    transfer to
+    transfer to GPU rather than per-pixel, per-sample scene-building
   - Requires object transformation support
   - Need to pass a flag through to tell the renderer which object to
     select, i.e., override material
-- Ambient occlusion
-  - Requires hemispherical sample sets
-  - Requires ambient occluding ambient light
-- Refactor/tear down existing materials and lighting and replace with
-  book implementations
-- Triangle meshes
-- Path tracing w/environment lights, concave spheres
-- Area lighting
-  GPU rather than per-pixel, per-sample scene-building
 - Make it possible to batch-process sample ranges in a single GPU pass
   (and to configure the batch size) and also investigate any performance
   difference yielded by batching samples. With a sufficiently large
@@ -30,14 +21,21 @@
   until an optimal point is found, up to some limit (since we want to
   render 25-30 real frames per second, so we need to figure out how many
   samples we can render in 1/25th to 1/30th of a second).
-- Image output capability (keypress -> write image)
+- Image output capability (keypress -> write image) (it would be nice
+  to be able to load a scene from disk and use its name when writing an
+  image)
 - Consider increasing window height to make room for overlay (always on,
   image height + height of overlay)
 - Use consistent capitalization
 - main(): do one GL acquire/release by allocating relevant GL objects
   adjacently
-- Send program state to OpenCL via cl_mem rather than sending many state
-  fields as individual parameters
-- Factor sampling setup out of main()?
 - Save on memory copies: only write to OpenCL buffers when values change
   (e.g. configBuf)
+
+Other:
+- Path tracing w/environment lights, concave spheres
+- Triangle meshes
+- Area lighting
+- Regular grids
+- Refactor/tear down existing materials and lighting and replace with
+  book implementations
