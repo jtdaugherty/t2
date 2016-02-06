@@ -51,6 +51,17 @@ struct sample_data {
     int *sampleIndices;
 };
 
+/* OpenCL buffers for configuration and state */
+cl_mem configBuf = NULL;
+cl_mem stateBuf = NULL;
+
+/* Dirty flags */
+int dirty_config = 1;
+int dirty_state = 1;
+
+/* OpenCL command queue */
+cl_command_queue command_queue = NULL;
+
 struct sample_data samples = { NULL, NULL, NULL, NULL, 0 };
 
 /* For logging.h to get access to the global log level */
@@ -66,6 +77,44 @@ static double cursorY;
 static inline void restartRendering()
 {
     programState.sampleNum = 0;
+}
+
+static inline void updateConfigBuffer()
+{
+    if (dirty_config) {
+        log_debug("Configuration changed, updating");
+        dirty_config = 0;
+        int ret = clEnqueueWriteBuffer(command_queue, configBuf, 1, 0, sizeof(struct configuration),
+                &config, 0, NULL, NULL);
+        if (ret) {
+            log_error("Error updating configuration buffer, ret %d", ret);
+            exit(1);
+        }
+    }
+}
+
+static inline void markConfigDirty()
+{
+    dirty_config = 1;
+}
+
+static inline void updateStateBuffer()
+{
+    if (dirty_state) {
+        log_debug("State changed, updating");
+        dirty_state = 0;
+        int ret = clEnqueueWriteBuffer(command_queue, stateBuf, 1, 0, sizeof(struct state),
+                &programState, 0, NULL, NULL);
+        if (ret) {
+            log_error("Error updating configuration buffer, ret %d", ret);
+            exit(1);
+        }
+    }
+}
+
+static inline void markStateDirty()
+{
+    dirty_state = 1;
 }
 
 int setup_samples(struct sample_data *s, int sampleRoot, struct configuration *cfg, cl_context context)
@@ -162,6 +211,7 @@ static inline void rotateHeading(cl_float angle)
                              cos(angle) * programState.heading.z;
 
     normalize(&programState.heading);
+    markStateDirty();
 }
 
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
@@ -189,6 +239,7 @@ void cursor_position_callback(GLFWwindow* window, double x, double y)
         cursorX = x;
         cursorY = y;
 
+        markStateDirty();
         restartRendering();
     }
 }
@@ -220,6 +271,7 @@ static void key_callback(GLFWwindow* window, int key, int scancode,
             exit(1);
         }
         restartRendering();
+        markConfigDirty();
     }
 
     if (INCREASE_SAMPLE_ROOT && config.sampleRoot < MAX_SAMPLE_ROOT) {
@@ -230,10 +282,12 @@ static void key_callback(GLFWwindow* window, int key, int scancode,
             exit(1);
         }
         restartRendering();
+        markConfigDirty();
     }
 
     if (TOGGLE_OVERLAY) {
         programState.show_overlay = !programState.show_overlay;
+        markStateDirty();
         log_info("Toggled overlay state, %d", programState.show_overlay);
     }
 
@@ -243,21 +297,25 @@ static void key_callback(GLFWwindow* window, int key, int scancode,
     if (DECREASE_DEPTH && config.traceDepth > 0) {
         config.traceDepth = config.traceDepth == 0 ? 0 : config.traceDepth - 1;
         restartRendering();
+        markConfigDirty();
     }
 
     if (INCREASE_DEPTH) {
         config.traceDepth++;
         restartRendering();
+        markConfigDirty();
     }
 
     if (DECREASE_RADIUS && programState.lens_radius > 0.0) {
         programState.lens_radius = MAXF(programState.lens_radius - 0.01, 0.0);
         restartRendering();
+        markStateDirty();
     }
 
     if (INCREASE_RADIUS) {
         programState.lens_radius += 0.01;
         restartRendering();
+        markStateDirty();
     }
 
     // Movement keys translate the position vector based on the heading
@@ -289,13 +347,13 @@ static void key_callback(GLFWwindow* window, int key, int scancode,
         programState.position.x += headingX;
         programState.position.z += headingZ;
         restartRendering();
+        markStateDirty();
     }
 }
 
 int main(int argc, char **argv)
 {
     cl_platform_id platform_id = NULL;
-    cl_command_queue command_queue = NULL;
     cl_program program = NULL;
     cl_kernel kernel = NULL;
     cl_int ret = -1;
@@ -405,7 +463,7 @@ int main(int argc, char **argv)
     }
 
     /* Set up OpenCL buffer reference to configuration */
-    cl_mem configBuf = clCreateBuffer(context, CL_MEM_READ_ONLY,
+    configBuf = clCreateBuffer(context, CL_MEM_READ_ONLY,
             sizeof(struct configuration), NULL, &ret);
     if (ret) {
         log_error("Could not create configuration buffer, ret %d", ret);
@@ -413,7 +471,7 @@ int main(int argc, char **argv)
     }
 
     /* Set up OpenCL buffer for program state */
-    cl_mem stateBuf = clCreateBuffer(context, CL_MEM_READ_ONLY,
+    stateBuf = clCreateBuffer(context, CL_MEM_READ_ONLY,
             sizeof(struct state), NULL, &ret);
     if (ret) {
         log_error("Could not create configuration buffer, ret %d", ret);
@@ -445,6 +503,7 @@ int main(int argc, char **argv)
     {
         if (programState.sampleNum < (config.sampleRoot * config.sampleRoot)) {
             programState.last_frame_time = -1;
+            markStateDirty();
 
             if (programState.sampleNum == 0)
                 gettimeofday(&start, NULL);
@@ -474,13 +533,12 @@ int main(int argc, char **argv)
                 exit(1);
             }
 
-            /* Update the configuration and state buffers */
-            ret = clEnqueueWriteBuffer(command_queue, configBuf, 1, 0, sizeof(struct configuration),
-                    &config, 0, NULL, NULL);
-            ret |= clEnqueueWriteBuffer(command_queue, stateBuf, 1, 0, sizeof(struct state),
-                    &programState, 0, NULL, NULL);
+            /* Update dirty structs */
+            updateConfigBuffer();
+            updateStateBuffer();
+
             /* Acquire OpenGL objects */
-            ret |= clEnqueueAcquireGLObjects(command_queue, 1, &texmemRead, 0, NULL, NULL);
+            ret = clEnqueueAcquireGLObjects(command_queue, 1, &texmemRead, 0, NULL, NULL);
             ret |= clEnqueueAcquireGLObjects(command_queue, 1, &texmemWrite, 0, NULL, NULL);
             if (ret) {
                 log_error("Could not issue OpenCL commands, ret %d", ret);
@@ -506,6 +564,7 @@ int main(int argc, char **argv)
             }
 
             programState.sampleNum++;
+            markStateDirty();
 
             if (programState.sampleNum == config.sampleRoot * config.sampleRoot) {
                 struct timeval stop;
