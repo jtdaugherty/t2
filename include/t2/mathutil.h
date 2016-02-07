@@ -4,15 +4,15 @@
 
 #define MAXF(a, b) ((a) > (b) ? (a) : (b))
 
-static inline void normalize(cl_float *vec)
+static inline void normalize(cl_float3 *vec)
 {
-    cl_float len = sqrt(vec[0] * vec[0] +
-            vec[1] * vec[1] +
-            vec[2] * vec[2]);
+    cl_float len = sqrt(vec->x * vec->x +
+            vec->y * vec->y +
+            vec->z * vec->z);
 
-    vec[0] /= len;
-    vec[1] /= len;
-    vec[2] /= len;
+    vec->x /= len;
+    vec->y /= len;
+    vec->z /= len;
 }
 
 #endif

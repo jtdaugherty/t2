@@ -7,14 +7,15 @@
 #include <t2/thinlens_camera.cl>
 #include <t2/config.cl>
 
+#include <t2/state.h>
+
 __kernel void raytracer(
         __global struct configuration *config,
+        __global struct state *state,
         __read_only image2d_t input,
         __write_only image2d_t output,
         __global float2 *squareSampleSets,
         __global float2 *diskSampleSets,
-        float3 position, float3 heading,
-        float lens_radius,
         int numSampleSets,
         uint sampleNum)
 {
@@ -27,7 +28,7 @@ __kernel void raytracer(
     // If this isn't the first sample for this frame, read the previous
     // sample data from the input image. Otherwise we take the current
     // sample as the first sample.
-    if (sampleNum > 0)
+    if (state->sampleNum > 0)
         origCVal = read_imagef(input, pos);
 
     // Compute the sample set offset in the sample set buffers based on
@@ -49,16 +50,16 @@ __kernel void raytracer(
 
     // Configure camera and trace ray
     if (s.cameraType == CAMERA_THINLENS) {
-        s.cameras.thinLens.eye = position;
-        s.cameras.thinLens.lookat = position + heading;
-        s.cameras.thinLens.lens_radius = lens_radius;
+        s.cameras.thinLens.eye = state->position;
+        s.cameras.thinLens.lookat = state->position + state->heading;
+        s.cameras.thinLens.lens_radius = state->lens_radius;
         thinlens_camera_compute_uvw(&s.cameras.thinLens);
 
         newCVal = thinlens_camera_render(&s.cameras.thinLens, &s,
                 config, pos, squareSample, diskSample);
     } else if (s.cameraType == CAMERA_PINHOLE) {
-        s.cameras.pinhole.eye = position;
-        s.cameras.pinhole.lookat = position + heading;
+        s.cameras.pinhole.eye = state->position;
+        s.cameras.pinhole.lookat = state->position + state->heading;
         pinhole_camera_compute_uvw(&s.cameras.pinhole);
 
         newCVal = pinhole_camera_render(&s.cameras.pinhole, &s,
@@ -67,8 +68,8 @@ __kernel void raytracer(
 
     // If this isn't the first sample for this frame, combine the new
     // sample with the old ones.
-    if (sampleNum > 0)
-        newCVal = (origCVal * sampleNum + newCVal) / (sampleNum + 1);
+    if (state->sampleNum > 0)
+        newCVal = (origCVal * state->sampleNum + newCVal) / (state->sampleNum + 1);
 
     // Write the final sample value to the output image.
     write_imagef(output, pos, newCVal);
