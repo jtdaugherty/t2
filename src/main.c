@@ -48,7 +48,6 @@ struct sample_data {
     cl_mem diskSampleBuf;
 
     size_t numSampleSets;
-    int *sampleIndices;
 };
 
 struct sample_data samples = { NULL, NULL, NULL, NULL, 0 };
@@ -86,10 +85,6 @@ int setup_samples(struct sample_data *s, int sampleRoot, struct configuration *c
         log_info("Freeing old disk samples");
         free(s->diskSamples);
         clReleaseMemObject(s->diskSampleBuf);
-    }
-
-    if (s->sampleIndices) {
-        free(s->sampleIndices);
     }
 
     log_info("Generating %d samples per pixel", sampleRoot * sampleRoot);
@@ -142,14 +137,6 @@ int setup_samples(struct sample_data *s, int sampleRoot, struct configuration *c
         log_error("Could not create square sample buffer, ret %d", ret);
         return 1;
     }
-
-    // Create a sample index indirection layer so we can randomize
-    // sample index selection to avoid visual artifacts from processing
-    // the samples in spatial order.
-    s->sampleIndices = malloc(sizeof(int) * sampleRoot * sampleRoot);
-    for (int i = 0; i < sampleRoot * sampleRoot; i++)
-        s->sampleIndices[i] = i;
-    shuffle(s->sampleIndices, sampleRoot * sampleRoot);
 
     return 0;
 }
@@ -441,8 +428,6 @@ int main(int argc, char **argv)
             copyTexture(res.fbo, res.writeTexture, res.readTexture,
                     config.width, config.height);
 
-            int thisSampleIdx = samples.sampleIndices[programState.sampleIdx];
-
             /* Set OpenCL Kernel Parameters */
             ret = 0;
             ret |= clSetKernelArg(kernel, 0,    sizeof(cl_mem),      &configBuf);
@@ -454,8 +439,7 @@ int main(int argc, char **argv)
             ret |= clSetKernelArg(kernel, 6,    sizeof(programState.heading),     programState.heading);
             ret |= clSetKernelArg(kernel, 7,    sizeof(programState.lens_radius), &programState.lens_radius);
             ret |= clSetKernelArg(kernel, 8,    sizeof(cl_int),      &samples.numSampleSets);
-            ret |= clSetKernelArg(kernel, 9,    sizeof(thisSampleIdx),   &thisSampleIdx);
-            ret |= clSetKernelArg(kernel, 10,   sizeof(programState.sampleIdx),   &programState.sampleIdx);
+            ret |= clSetKernelArg(kernel, 9,    sizeof(programState.sampleIdx),   &programState.sampleIdx);
 
             if (ret) {
                 log_error("Could not set kernel argument, ret %d", ret);

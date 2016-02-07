@@ -1,6 +1,7 @@
 
 #include <stdlib.h>
 #include <math.h>
+#include <string.h>
 
 #include <t2/samplers.h>
 
@@ -10,16 +11,23 @@ static inline float randFloat()
     return ((float)arc4random_uniform(upper_bound))/((float)upper_bound);
 }
 
-void shuffle(int *array, size_t n)
+void shuffle(void *buf, size_t n, size_t elem_size)
 {
+    void *item;
+
     if (n > 1) {
+        item = malloc(elem_size);
+
         size_t i;
         for (i = n - 1; i > 0; i--) {
             size_t j = (unsigned int) (arc4random_uniform(i+1));
-            int t = array[j];
-            array[j] = array[i];
-            array[i] = t;
+
+            memcpy(item, buf + (j * elem_size), elem_size);
+            memcpy(buf + (j * elem_size), buf + (i * elem_size), elem_size);
+            memcpy(buf + (i * elem_size), item, elem_size);
         }
+
+        free(item);
     }
 }
 
@@ -74,6 +82,9 @@ void generateRandomSampleSet(float *samples, int sampleRoot, void(*map)(float*, 
             samples[i * sampleRoot * 2 + j * 2 + 1] = y;
         }
     }
+
+    if (sampleRoot > 1)
+        shuffle(samples, sampleRoot * sampleRoot, sizeof(float) * 2);
 }
 
 void generateJitteredSampleSet(float *samples, int sampleRoot, void(*map)(float*, float*))
@@ -94,4 +105,7 @@ void generateJitteredSampleSet(float *samples, int sampleRoot, void(*map)(float*
             samples[i * sampleRoot * 2 + j * 2 + 1] = y;
         }
     }
+
+    if (sampleRoot > 1)
+        shuffle(samples, sampleRoot * sampleRoot, sizeof(float) * 2);
 }
