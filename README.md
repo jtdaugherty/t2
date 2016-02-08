@@ -14,28 +14,24 @@ Features:
 Building
 --------
 
-Right now `t2` only builds on OS X.  To install dependencies:
+Right now `t2` only builds on OS X. To install dependencies and build:
 ```
 $ brew install glfw3 --without-shared-library --with-examples
 $ brew install glew
 $ brew install freetype2
-```
-then
-```
 $ make
-$ ./t2
 ```
 
 Running
 -------
 
-To get help:
-```
-$ ./t2 -h
-```
-Or just run with defaults:
+Run with defaults:
 ```
 $ ./t2
+```
+or get help to learn about settings to change:
+```
+$ ./t2 -h
 ```
 
 Keyboard Controls
