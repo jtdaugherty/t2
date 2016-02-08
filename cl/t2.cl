@@ -77,7 +77,8 @@ __kernel void raytracer(
         // previous sample data from the input image. Otherwise we take
         // the current sample as the first sample.
         origCVal = read_imagef(input, pos);
-        newCVal = (origCVal * (float)state->sampleNum + newCVal) / ((float)state->sampleNum + (float)batchSize);
+        newCVal = (origCVal * (float)state->sampleNum + newCVal) /
+            ((float)state->sampleNum + (float)batchSize);
     } else if (batchSize > 1)
         newCVal /= (float4)(batchSize);
 
