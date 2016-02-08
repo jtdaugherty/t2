@@ -511,7 +511,6 @@ int main(int argc, char **argv)
             ret |= clSetKernelArg(kernel, 4, sizeof(cl_mem),         &samples.squareSampleBuf);
             ret |= clSetKernelArg(kernel, 5, sizeof(cl_mem),         &samples.diskSampleBuf);
             ret |= clSetKernelArg(kernel, 6, sizeof(cl_int),         &samples.numSampleSets);
-            ret |= clSetKernelArg(kernel, 7, sizeof(programState.sampleNum), &programState.sampleNum);
 
             if (ret) {
                 log_error("Could not set kernel argument, ret %d", ret);

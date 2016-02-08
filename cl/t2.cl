@@ -16,8 +16,7 @@ __kernel void raytracer(
         __write_only image2d_t output,
         __global float2 *squareSampleSets,
         __global float2 *diskSampleSets,
-        int numSampleSets,
-        uint sampleNum)
+        int numSampleSets)
 {
     struct Scene s;
     buildscene(&s);
@@ -42,8 +41,8 @@ __kernel void raytracer(
     __global float2 *diskSamples = diskSampleSets + offset;
 
     // Select samples from sets based on current sample index.
-    float2 squareSample = squareSamples[sampleNum];
-    float2 diskSample = diskSamples[sampleNum];
+    float2 squareSample = squareSamples[state->sampleNum];
+    float2 diskSample = diskSamples[state->sampleNum];
 
     // newCVal is where we store the current color.
     float4 newCVal;
