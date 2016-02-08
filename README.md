@@ -1,6 +1,18 @@
 
-Setup
------
+t2
+--
+
+`t2` is an interactive ray tracer. It is written in C and OpenCL C and
+runs on OpenCL-compatible devices.
+
+Features:
+* Progressive rendering with keyboard and mouse input for camera
+  navigation
+* Thin lens camera with depth of field (see lens radius setting)
+* Monte Carlo rendering (see sample root setting)
+
+Building
+--------
 
 To install dependencies:
 ```
@@ -12,4 +24,29 @@ then
 ```
 $ make
 $ ./t2
+```
+
+Running
+-------
+To get help:
+```
+$ ./t2 -h
+```
+Or just run with defaults:
+```
+$ ./t2
+```
+
+Keyboard Controls
+-----------------
+```
+Esc, q          Quit
+a               Move left (strafe)
+d               Move right (strafe)
+w               Move forward
+s               Move backward
+-/+             Decrease/increase trace depth
+r/R             Decrease/increase lens radius
+o               Toggle overlay display
+t/T             Decrease/increase sample root
 ```
