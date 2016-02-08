@@ -78,7 +78,8 @@ movement */
 static double cursorX;
 static double cursorY;
 
-/* Button press mask and bits */
+/* Button press mask and bits for tracking whether to reduce or restore
+the rendering sample batch size */
 uint8_t button_mask = 0;
 #define KB_PRESSED      (1 << 0)
 #define MOUSE_PRESSED   (1 << 1)
