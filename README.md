@@ -41,14 +41,18 @@ $ ./t2
 Keyboard Controls
 -----------------
 
-```
-Esc, q          Quit
-a               Move left (strafe)
-d               Move right (strafe)
-w               Move forward
-s               Move backward
--/+             Decrease/increase trace depth
-r/R             Decrease/increase lens radius
-o               Toggle overlay display
-t/T             Decrease/increase sample root
-```
+* `Esc`, `q` - Quit
+* `a` - Move left (strafe)
+* `d` - Move right (strafe)
+* `w` - Move forward
+* `s` - Move backward
+* `-`/`+` - Decrease/increase trace depth
+* `r`/`R` - Decrease/increase lens radius
+* `o` - Toggle overlay display
+* `t`/`T` - Decrease/increase sample root
+
+Mouse Controls
+--------------
+
+* Hold left mouse button and move: change camera viewing direction
+  (left-right only)
