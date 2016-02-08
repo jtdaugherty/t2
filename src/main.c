@@ -260,10 +260,10 @@ static void key_callback(GLFWwindow* window, int key, int scancode,
 #define SHIFT (mods & GLFW_MOD_SHIFT)
 
 #define QUIT            (PRESS(GLFW_KEY_ESCAPE) || PRESS(GLFW_KEY_Q))
-#define MOVE_BACKWARD   (PRESS(GLFW_KEY_A))
+#define MOVE_BACKWARD   (PRESS(GLFW_KEY_S))
 #define MOVE_RIGHT      (PRESS(GLFW_KEY_D))
 #define MOVE_FORWARD    (PRESS(GLFW_KEY_W))
-#define MOVE_LEFT       (PRESS(GLFW_KEY_S))
+#define MOVE_LEFT       (PRESS(GLFW_KEY_A))
 #define DECREASE_DEPTH  (PRESS(GLFW_KEY_MINUS))
 #define INCREASE_DEPTH  (PRESS(GLFW_KEY_EQUAL) && SHIFT)
 #define DECREASE_RADIUS (PRESS(GLFW_KEY_R) && (!SHIFT))
@@ -343,7 +343,7 @@ static void key_callback(GLFWwindow* window, int key, int scancode,
         headingZ = vel * programState.heading.z;
     }
 
-    if (MOVE_LEFT) {
+    if (MOVE_BACKWARD) {
         headingX = -1 * vel * programState.heading.x;
         headingZ = -1 * vel * programState.heading.z;
     }
@@ -353,7 +353,7 @@ static void key_callback(GLFWwindow* window, int key, int scancode,
         headingZ = vel * programState.heading.x;
     }
 
-    if (MOVE_BACKWARD) {
+    if (MOVE_LEFT) {
         headingX = vel * programState.heading.z;
         headingZ = -1 * vel * programState.heading.x;
     }
