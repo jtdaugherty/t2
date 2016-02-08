@@ -85,9 +85,6 @@ uint8_t button_mask = 0;
 #define ANY_PRESSED     ((button_mask & (KB_PRESSED | MOUSE_PRESSED)) != 0)
 #define NONE_PRESSED    ((button_mask & (KB_PRESSED | MOUSE_PRESSED)) == 0)
 
-#define CLEAR_BIT(mask, bit)  do { mask &= ~bit; } while (0);
-#define SET_BIT(mask, bit)    do { mask |= bit; } while (0);
-
 static inline void restartRendering()
 {
     programState.sampleNum = 0;
