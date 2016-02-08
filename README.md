@@ -14,7 +14,7 @@ Features:
 Building
 --------
 
-To install dependencies:
+Right now `t2` only builds on OS X.  To install dependencies:
 ```
 $ brew install glfw3 --without-shared-library --with-examples
 $ brew install glew
@@ -28,6 +28,7 @@ $ ./t2
 
 Running
 -------
+
 To get help:
 ```
 $ ./t2 -h
@@ -39,6 +40,7 @@ $ ./t2
 
 Keyboard Controls
 -----------------
+
 ```
 Esc, q          Quit
 a               Move left (strafe)
