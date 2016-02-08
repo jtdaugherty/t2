@@ -59,14 +59,21 @@ cl_mem stateBuf = NULL;
 int dirty_config = 1;
 int dirty_state = 1;
 
-/* OpenCL command queue */
+/* OpenCL command queue. This is global because updateConfigBuffer
+needs to be able to selectively issue an OpenCL buffer update when the
+configuration changes. */
 cl_command_queue command_queue = NULL;
 
+/* Where sample buffer pointers are kept. These are global so that GLFW
+handlers can trigger sample allocations and update this structure. */
 struct sample_data samples = { NULL, NULL, NULL, NULL, 0 };
 
 /* For logging.h to get access to the global log level */
 int *global_log_level = &config.logLevel;
 
+/* The OpenCL context. This is global so that we can access it in the
+GLFW handlers since they don't support passing in a void * user pointer.
+*/
 cl_context context = NULL;
 
 /* Store the old configured batch size here while a key or mouse button
