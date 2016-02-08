@@ -12,8 +12,10 @@ void usage(char *progname, struct configuration *config)
     printf("Options:\n");
     printf("    -h           This help output\n");
     printf("    -d DEPTH     Trace depth (default: %d)\n", config->traceDepth);
-    printf("    -r ROOT      Sample root (default: %d, max: %d)\n", config->sampleRoot,
-                                                                    MAX_SAMPLE_ROOT);
+    printf("    -r ROOT      Sample root (default: %d, max: %d)\n",
+            config->sampleRoot, MAX_SAMPLE_ROOT);
+    printf("    -b SIZE      Batch size in samples per kernel invocation (default: %d)\n",
+            config->batchSize);
     printf("    -W WIDTH     Window width (default: %d)\n", config->width);
     printf("    -H HEIGHT    Window height (default: %d)\n", config->height);
     printf("    -l LEVEL     Log level (default: %s)\n", log_level_name(config->logLevel));
@@ -25,8 +27,16 @@ void processArgs(int argc, char **argv, struct configuration *config)
     int ch, logLevel;
     struct configuration newConfig = *config;
 
-    while ((ch = getopt(argc, argv, "hd:r:W:H:l:")) != -1) {
+    while ((ch = getopt(argc, argv, "b:hd:r:W:H:l:")) != -1) {
         switch (ch) {
+            case 'b':
+                if (atoi(optarg) < 0) {
+                    goto bad;
+                }
+
+                newConfig.batchSize = atoi(optarg);
+                break;
+
             case 'd':
                 if (atoi(optarg) < 0) {
                     goto bad;

@@ -9,6 +9,7 @@ struct configuration {
     int width;
     int height;
     int _unused_logLevel;
+    int _unused_batchSize;
 };
 
 #endif

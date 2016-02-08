@@ -11,18 +11,6 @@
   - Requires object transformation support
   - Need to pass a flag through to tell the renderer which object to
     select, i.e., override material
-- Make it possible to batch-process sample ranges in a single GPU pass
-  (and to configure the batch size) and also investigate any performance
-  difference yielded by batching samples. With a sufficiently large
-  batch size this might help reduce spatial jitter when a frame begins
-  rendering. But for slow-rendering scenes (e.g. path-traced scenes)
-  when a single sample rendering time is long enough, we might not
-  want to batch at all. Maybe this could be learned as the program
-  renders its first few frames: if the per-sample time is very low
-  (below some reasonable threshold) the batch size could be increased
-  until an optimal point is found, up to some limit (since we want to
-  render 25-30 real frames per second, so we need to figure out how many
-  samples we can render in 1/25th to 1/30th of a second).
 - Image output capability (keypress -> write image) (it would be nice
   to be able to load a scene from disk and use its name when writing an
   image)

@@ -37,7 +37,8 @@ struct configuration config = {
     .sampleRoot = 1,
     .width = 640,
     .height = 480,
-    .logLevel = LOG_INFO
+    .logLevel = LOG_INFO,
+    .batchSize = 1
 };
 
 struct sample_data {
@@ -68,10 +69,21 @@ int *global_log_level = &config.logLevel;
 
 cl_context context = NULL;
 
+/* Store the old configured batch size here while a key or mouse button
+is held down */
+cl_uint oldBatchSize = -1;
+
 /* Last known mouse cursor position for computing deltas during mouse
 movement */
 static double cursorX;
 static double cursorY;
+
+/* Button press mask and bits */
+uint8_t button_mask = 0;
+#define KB_PRESSED      (1 << 0)
+#define MOUSE_PRESSED   (1 << 1)
+#define ANY_PRESSED     ((button_mask & (KB_PRESSED | MOUSE_PRESSED)) != 0)
+#define NONE_PRESSED    ((button_mask & (KB_PRESSED | MOUSE_PRESSED)) == 0)
 
 static inline void restartRendering()
 {
@@ -100,7 +112,6 @@ static inline void markConfigDirty()
 static inline void updateStateBuffer()
 {
     if (dirty_state) {
-        log_debug("State changed, updating");
         dirty_state = 0;
         int ret = clEnqueueWriteBuffer(command_queue, stateBuf, 1, 0, sizeof(struct state),
                 &programState, 0, NULL, NULL);
@@ -208,10 +219,13 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 
     if (action == GLFW_PRESS)
     {
+        button_mask |= MOUSE_PRESSED;
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
         glfwGetCursorPos(window, &cursorX, &cursorY);
-    } else
+    } else {
+        button_mask &= ~MOUSE_PRESSED;
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+    }
 }
 
 void cursor_position_callback(GLFWwindow* window, double x, double y)
@@ -249,6 +263,12 @@ static void key_callback(GLFWwindow* window, int key, int scancode,
 #define TOGGLE_OVERLAY  (PRESS(GLFW_KEY_O))
 #define DECREASE_SAMPLE_ROOT (PRESS(GLFW_KEY_T) && (!SHIFT))
 #define INCREASE_SAMPLE_ROOT (PRESS(GLFW_KEY_T) && SHIFT)
+
+    if (action == GLFW_PRESS) {
+        button_mask |= KB_PRESSED;
+    } else if (action == GLFW_RELEASE) {
+        button_mask &= ~KB_PRESSED;
+    }
 
     if (DECREASE_SAMPLE_ROOT && config.sampleRoot > 1) {
         config.sampleRoot--;
@@ -475,6 +495,7 @@ int main(int argc, char **argv)
 
     struct timeval start;
     size_t global_work_size[2] = { config.width, config.height };
+    cl_uint batchSize = 0;
 
     ret  = clSetKernelArg(kernel, 0, sizeof(cl_mem), &configBuf);
     ret |= clSetKernelArg(kernel, 1, sizeof(cl_mem), &stateBuf);
@@ -488,9 +509,18 @@ int main(int argc, char **argv)
 
     while (!glfwWindowShouldClose(window))
     {
+        if (ANY_PRESSED && (oldBatchSize == -1)) {
+            log_debug("Lowering batch size to 1");
+            oldBatchSize = config.batchSize;
+            config.batchSize = 1;
+        } else if (NONE_PRESSED && oldBatchSize != -1) {
+            log_debug("Restoring batch size to %d", oldBatchSize);
+            config.batchSize = oldBatchSize;
+            oldBatchSize = -1;
+        }
+
         if (programState.sampleNum < (config.sampleRoot * config.sampleRoot)) {
             programState.last_frame_time = -1;
-            markStateDirty();
 
             if (programState.sampleNum == 0)
                 gettimeofday(&start, NULL);
@@ -506,11 +536,16 @@ int main(int argc, char **argv)
             copyTexture(res.fbo, res.writeTexture, res.readTexture,
                     config.width, config.height);
 
+            /* Determine the number of samples in this batch */
+            batchSize = MINF(config.batchSize,
+                    config.sampleRoot * config.sampleRoot - programState.sampleNum);
+
             /* Set OpenCL Kernel Parameters */
             ret = 0;
             ret |= clSetKernelArg(kernel, 4, sizeof(cl_mem), &samples.squareSampleBuf);
             ret |= clSetKernelArg(kernel, 5, sizeof(cl_mem), &samples.diskSampleBuf);
             ret |= clSetKernelArg(kernel, 6, sizeof(cl_int), &samples.numSampleSets);
+            ret |= clSetKernelArg(kernel, 7, sizeof(batchSize), &batchSize);
 
             if (ret) {
                 log_error("Could not set kernel argument, ret %d", ret);
@@ -545,7 +580,9 @@ int main(int argc, char **argv)
                 exit(1);
             }
 
-            programState.sampleNum++;
+            clFinish(command_queue);
+
+            programState.sampleNum += batchSize;
             markStateDirty();
 
             if (programState.sampleNum == config.sampleRoot * config.sampleRoot) {

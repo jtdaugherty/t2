@@ -19,6 +19,9 @@ struct configuration {
 
     // Log level (see t2/logging.h)
     int logLevel;
+
+    // Batch size: number of samples per kernel invocation
+    int batchSize;
 };
 
 #endif
