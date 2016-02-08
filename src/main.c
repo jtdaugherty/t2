@@ -508,9 +508,9 @@ int main(int argc, char **argv)
 
             /* Set OpenCL Kernel Parameters */
             ret = 0;
-            ret |= clSetKernelArg(kernel, 4, sizeof(cl_mem),         &samples.squareSampleBuf);
-            ret |= clSetKernelArg(kernel, 5, sizeof(cl_mem),         &samples.diskSampleBuf);
-            ret |= clSetKernelArg(kernel, 6, sizeof(cl_int),         &samples.numSampleSets);
+            ret |= clSetKernelArg(kernel, 4, sizeof(cl_mem), &samples.squareSampleBuf);
+            ret |= clSetKernelArg(kernel, 5, sizeof(cl_mem), &samples.diskSampleBuf);
+            ret |= clSetKernelArg(kernel, 6, sizeof(cl_int), &samples.numSampleSets);
 
             if (ret) {
                 log_error("Could not set kernel argument, ret %d", ret);
