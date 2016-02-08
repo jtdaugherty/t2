@@ -85,6 +85,9 @@ uint8_t button_mask = 0;
 #define ANY_PRESSED     ((button_mask & (KB_PRESSED | MOUSE_PRESSED)) != 0)
 #define NONE_PRESSED    ((button_mask & (KB_PRESSED | MOUSE_PRESSED)) == 0)
 
+#define CLEAR(mask, bit)  do { mask &= ~bit; } while (0);
+#define SET(mask, bit)    do { mask |= bit; } while (0);
+
 static inline void restartRendering()
 {
     programState.sampleNum = 0;
@@ -219,11 +222,11 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 
     if (action == GLFW_PRESS)
     {
-        button_mask |= MOUSE_PRESSED;
+        SET(button_mask, MOUSE_PRESSED);
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
         glfwGetCursorPos(window, &cursorX, &cursorY);
     } else {
-        button_mask &= ~MOUSE_PRESSED;
+        CLEAR(button_mask, MOUSE_PRESSED);
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
     }
 }
@@ -265,9 +268,9 @@ static void key_callback(GLFWwindow* window, int key, int scancode,
 #define INCREASE_SAMPLE_ROOT (PRESS(GLFW_KEY_T) && SHIFT)
 
     if (action == GLFW_PRESS) {
-        button_mask |= KB_PRESSED;
+        SET(button_mask, KB_PRESSED);
     } else if (action == GLFW_RELEASE) {
-        button_mask &= ~KB_PRESSED;
+        CLEAR(button_mask, KB_PRESSED);
     }
 
     if (DECREASE_SAMPLE_ROOT && config.sampleRoot > 1) {
