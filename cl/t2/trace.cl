@@ -63,11 +63,8 @@ static int findintersection(struct Scene *s, struct Ray *r, struct IntersectionR
 
 static int shadowRayHit(struct Scene *s, float3 L, float3 P)
 {
-    float t = length(L);
-    L *= 1.f / t;
-
     struct Ray light;
-    light.origin = P + L * EPSILON;
+    light.origin = P;
     light.dir = L;
 
     return findintersection(s, &light, 0);
@@ -96,10 +93,9 @@ static float4 raytrace(struct Scene *s, struct RayStack *stack, uint traceDepth,
     for (uint i = 0; i < s->numLights; i++)
     {
         light = &(s->lights[i]);
-        L = light->center - P;
+        L = normalize(light->center - P);
 
         if (shadowRayHit(s, L, P) == 0) {
-            L = normalize(L);
             angle = fmax(0.f, dot(N, L));
             sv = dot(r->dir, reflect(N, L));
 
