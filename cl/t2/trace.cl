@@ -19,11 +19,12 @@ static int findintersection(struct Scene *s, struct Ray *r, struct IntersectionR
     }
 
     int hitObject = -1;
+    int res;
+    float lDist;
 
     for (uint i = 0; i < s->numObjects; i++)
     {
-        float lDist = MAXFLOAT;
-        int res;
+        lDist = MAXFLOAT;
         if (s->objects[i].type == OBJECT_SPHERE) {
             res = sphereintersect(&s->objects[i].types.sphere, r, &lDist);
         } else if (s->objects[i].type == OBJECT_PLANE) {
