@@ -3,6 +3,7 @@ CC = gcc
 COMMIT = $(shell git log -1 --format="%h")
 
 CFLAGS = \
+		 -O3 \
 		 -DT2_COMMIT=\"$(COMMIT)\" \
 		 -Wall -Iinclude \
 		 $(shell pkg-config --cflags glfw3) \
