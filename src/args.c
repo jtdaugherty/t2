@@ -91,6 +91,11 @@ bad:
         }
     }
 
+    if (optind < argc) {
+        usage(argv[0], config);
+        return;
+    }
+
     *config = newConfig;
     return;
 }
