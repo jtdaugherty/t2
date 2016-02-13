@@ -15,8 +15,7 @@ struct RayStack
 
 static void push(struct RayStack *s, struct Ray *r, int depth)
 {
-    if(s->top < STACK_DEPTH)
-    {
+    if (s->top < STACK_DEPTH) {
         s->r[s->top].dir = r->dir;
         s->r[s->top].origin = r->origin;
         s->depth[s->top] = depth;
