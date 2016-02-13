@@ -18,6 +18,8 @@ static int findintersection(struct Scene *s, struct Ray *r, struct IntersectionR
         intersection->result = 0;
     }
 
+    int hitObject = -1;
+
     for (uint i = 0; i < s->numObjects; i++)
     {
         float lDist = MAXFLOAT;
@@ -36,28 +38,30 @@ static int findintersection(struct Scene *s, struct Ray *r, struct IntersectionR
                 // find any hit at all.
                 return res;
             } else if (lDist < intersection->distance) {
-                intersection->result = res;
+                intersection->result = 1;
                 intersection->distance = lDist;
-                intersection->position = r->origin + r->dir * lDist;
-
-                if (s->objects[i].type == OBJECT_SPHERE) {
-                    intersection->normal = spherenormal(&s->objects[i].types.sphere, intersection->position);
-                    intersection->material = &s->materials[s->objects[i].material];
-                } else if (s->objects[i].type == OBJECT_PLANE) {
-                    intersection->normal = (&s->objects[i].types.plane)->normal;
-                    intersection->material = &s->materials[s->objects[i].material];
-                }
+                hitObject = i;
             }
         }
     }
 
-    if (intersection)
+    if (intersection) {
+        if (intersection->result) {
+            intersection->position = r->origin + r->dir * intersection->distance;
+            intersection->material = &s->materials[s->objects[hitObject].material];
+            if (s->objects[hitObject].type == OBJECT_SPHERE) {
+                intersection->normal = spherenormal(&s->objects[hitObject].types.sphere,
+                        intersection->position);
+            } else if (s->objects[hitObject].type == OBJECT_PLANE) {
+                intersection->normal = (&s->objects[hitObject].types.plane)->normal;
+            }
+        }
         return intersection->result;
-    else
+    } else
         return 0;
 }
 
-static float shadowray(struct Scene *s, float3 L, float3 P)
+static int shadowRayHit(struct Scene *s, float3 L, float3 P)
 {
     float t = length(L);
     L *= 1.f / t;
@@ -66,42 +70,46 @@ static float shadowray(struct Scene *s, float3 L, float3 P)
     light.origin = P + L * EPSILON;
     light.dir = L;
 
-    return findintersection(s, &light, 0) ? 0.f : 1.f;
+    return findintersection(s, &light, 0);
 }
 
 static float4 raytrace(struct Scene *s, struct RayStack *stack, uint traceDepth, struct Ray *r, uint depth)
 {
     float4 color = (float4)(0, 0, 0, 0);
 
-    if(depth > traceDepth) return color;
+    if (depth > traceDepth) return color;
 
     struct IntersectionResult intersection;
     int result = findintersection(s, r, &intersection);
 
-    if(result == 0) return color;
+    if (result == 0) return color;
 
     struct Material *m  = intersection.material;
     float3 P = intersection.position;
     float3 N = intersection.normal;
 
-    for(uint i = 0; i < s->numLights; i++)
+    float angle, sv;
+    float3 L;
+    float4 lColor;
+    struct Light *light;
+
+    for (uint i = 0; i < s->numLights; i++)
     {
-        float lStrength = s->lights[i].strength;
-        float4 lColor = s->lights[i].color;
-        float3 L = s->lights[i].center - P;
+        light = &(s->lights[i]);
+        L = light->center - P;
 
-        float shade = shadowray(s, L, P);
+        if (shadowRayHit(s, L, P) == 0) {
+            L = normalize(L);
+            angle = fmax(0.f, dot(N, L));
+            sv = dot(r->dir, reflect(N, L));
 
-        L = normalize(L);
-
-        float angle = fmax(0.f, dot(N, L)) * shade;
-        float s = dot(r->dir, reflect(N, L)) * shade;
-
-        color += angle * m->diff * m->amb * float4(lStrength) * lColor
-            + powr(fmax(0.f, s), m->spec) * float4(lStrength) * lColor;
+            lColor = (float4)(light->strength) * light->color;
+            color += angle * m->diff * m->amb * lColor
+                + powr(fmax(0.f, sv), m->spec) * lColor;
+        }
     }
 
-    if(m->refl > 0)
+    if (m->refl > 0)
     {
         float3 refl = reflect(N, r->dir);
 
