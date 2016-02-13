@@ -11,7 +11,8 @@ static float3 reflect(float3 A, float3 B)
     return B - ((float3)2) * (float3)dot(A, B) * A;
 }
 
-static int findintersection(struct Scene *s, struct Ray *r, struct IntersectionResult *intersection)
+static int findintersection(struct Scene *s, struct Ray *r,
+        struct IntersectionResult *intersection)
 {
     if (intersection) {
         intersection->distance = MAXFLOAT;
@@ -71,7 +72,8 @@ static int shadowRayHit(struct Scene *s, float3 L, float3 P)
     return findintersection(s, &light, 0);
 }
 
-static float4 raytrace(struct Scene *s, struct RayStack *stack, uint traceDepth, struct Ray *r, uint depth)
+static float4 raytrace(struct Scene *s, struct RayStack *stack, uint traceDepth,
+        struct Ray *r, uint depth)
 {
     float4 color = (float4)(0, 0, 0, 0);
 
