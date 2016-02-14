@@ -18,7 +18,7 @@ static float3 pinhole_camera_ray_direction(struct PinholeCamera *camera, float2 
 
 static float4 pinhole_camera_render(
         struct PinholeCamera *camera, struct Scene *scene,
-        __global struct configuration *config,
+        __constant struct configuration *config,
         int2 coord, float2 squareSample)
 {
     float2 pp = (float2)(coord.x - (config->width / 2.f) + squareSample.x,

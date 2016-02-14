@@ -26,7 +26,7 @@ static float3 thinlens_camera_ray_direction(struct ThinLensCamera *camera, float
 
 static float4 thinlens_camera_render(
         struct ThinLensCamera *camera, struct Scene *scene,
-        __global struct configuration *config,
+        __constant struct configuration *config,
         int2 coord,
         float2 squareSample, float2 diskSample)
 {

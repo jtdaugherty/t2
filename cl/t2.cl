@@ -10,8 +10,8 @@
 #include <t2/state.h>
 
 __kernel void raytracer(
-        __global struct configuration *config,
-        __global struct state *state,
+        __constant struct configuration *config,
+        __constant struct state *state,
         __read_only image2d_t input,
         __write_only image2d_t output,
         __global float2 *squareSampleSets,
