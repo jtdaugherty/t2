@@ -25,6 +25,9 @@ struct configuration {
 
     // Whether sampling is paused
     int paused;
+
+    // Whether to run in fullscreen mode
+    int fullScreen;
 };
 
 #endif

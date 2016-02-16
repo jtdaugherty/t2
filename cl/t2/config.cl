@@ -11,6 +11,7 @@ struct configuration {
     int _unused_logLevel;
     int _unused_batchSize;
     int _unused_paused;
+    int _unused_fullScreen;
 };
 
 #endif

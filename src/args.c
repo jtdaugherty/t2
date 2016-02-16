@@ -16,9 +16,10 @@ void usage(char *progname, struct configuration *config)
             config->sampleRoot, MAX_SAMPLE_ROOT);
     printf("    -b SIZE      Batch size in samples per kernel invocation (default: %d)\n",
             config->batchSize);
-    printf("    -W WIDTH     Window width (default: %d)\n", config->width);
-    printf("    -H HEIGHT    Window height (default: %d)\n", config->height);
+    printf("    -W WIDTH     Scene width (default: %d)\n", config->width);
+    printf("    -H HEIGHT    Scene height (default: %d)\n", config->height);
     printf("    -l LEVEL     Log level (default: %s)\n", log_level_name(config->logLevel));
+    printf("    -f           Run in windowed fullscreen mode\n");
     exit(1);
 }
 
@@ -27,7 +28,7 @@ void processArgs(int argc, char **argv, struct configuration *config)
     int ch, logLevel;
     struct configuration newConfig = *config;
 
-    while ((ch = getopt(argc, argv, "b:hd:r:W:H:l:")) != -1) {
+    while ((ch = getopt(argc, argv, "b:fhd:r:W:H:l:")) != -1) {
         switch (ch) {
             case 'b':
                 if (atoi(optarg) < 0) {
@@ -80,6 +81,10 @@ void processArgs(int argc, char **argv, struct configuration *config)
                 }
 
                 newConfig.logLevel = logLevel;
+                break;
+
+            case 'f':
+                newConfig.fullScreen = 1;
                 break;
 
             case '?':

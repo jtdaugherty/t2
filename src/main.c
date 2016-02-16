@@ -39,7 +39,8 @@ struct configuration config = {
     .height = 600,
     .logLevel = LOG_INFO,
     .batchSize = 1,
-    .paused = 0
+    .paused = 0,
+    .fullScreen = 0
 };
 
 struct sample_data {
@@ -409,8 +410,22 @@ int main(int argc, char **argv)
     glfwWindowHint(GLFW_SRGB_CAPABLE, GL_TRUE);
 
     /* Create a windowed mode window and its OpenGL context */
-    GLFWwindow* window = glfwCreateWindow(config.width, config.height, "t2",
+    GLFWwindow* window = NULL;
+
+    if (config.fullScreen) {
+        GLFWmonitor *monitor = glfwGetPrimaryMonitor();
+        const GLFWvidmode *mode = glfwGetVideoMode(monitor);
+
+        glfwWindowHint(GLFW_RED_BITS, mode->redBits);
+        glfwWindowHint(GLFW_GREEN_BITS, mode->greenBits);
+        glfwWindowHint(GLFW_BLUE_BITS, mode->blueBits);
+        glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
+        window = glfwCreateWindow(mode->width, mode->height, "t2", monitor, NULL);
+    } else {
+        window = glfwCreateWindow(config.width, config.height, "t2",
                                           NULL, NULL);
+    }
+
     if (!window) {
         log_error("Could not create GLFW window");
         glfwTerminate();
