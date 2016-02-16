@@ -35,8 +35,8 @@ struct state programState = {
 struct configuration config = {
     .traceDepth = 5,
     .sampleRoot = 1,
-    .width = 640,
-    .height = 480,
+    .width = 800,
+    .height = 600,
     .logLevel = LOG_INFO,
     .batchSize = 1
 };
