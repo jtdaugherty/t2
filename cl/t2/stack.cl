@@ -10,15 +10,17 @@ struct RayStack
 {
     struct Ray r[STACK_DEPTH];
     int depth[STACK_DEPTH];
+    float contribAmount[STACK_DEPTH];
     int top;
 };
 
-static void push(struct RayStack *s, struct Ray *r, int depth)
+static void push(struct RayStack *s, struct Ray *r, int depth, float contribAmount)
 {
     if (s->top < STACK_DEPTH) {
         s->r[s->top].dir = r->dir;
         s->r[s->top].origin = r->origin;
         s->depth[s->top] = depth;
+        s->contribAmount[s->top] = contribAmount;
         s->top++;
     }
 }

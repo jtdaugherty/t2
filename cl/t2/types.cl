@@ -73,6 +73,8 @@ struct Material
     float diff;
     float spec;
     float4 amb;
+    float reflAmount;
+    float specAmount;
 };
 
 enum CameraType {

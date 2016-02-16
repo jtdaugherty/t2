@@ -73,7 +73,7 @@ static int shadowRayHit(struct Scene *s, float3 L, float3 P)
 }
 
 static float4 raytrace(struct Scene *s, struct RayStack *stack, uint traceDepth,
-        struct Ray *r, uint depth)
+        struct Ray *r, uint depth, float prevAmount)
 {
     float4 color = (float4)(0, 0, 0, 0);
 
@@ -104,11 +104,11 @@ static float4 raytrace(struct Scene *s, struct RayStack *stack, uint traceDepth,
 
             lColor = (float4)(light->strength) * light->color;
             color += angle * m->diff * m->amb * lColor
-                + powr(fmax(0.f, sv), m->spec) * lColor;
+                + powr(fmax(0.f, sv), m->spec) * lColor * m->specAmount;
         }
     }
 
-    if (m->refl > 0)
+    if (m->refl > 0 && m->reflAmount > 0 && prevAmount > 0)
     {
         float3 refl = reflect(N, r->dir);
 
@@ -116,7 +116,7 @@ static float4 raytrace(struct Scene *s, struct RayStack *stack, uint traceDepth,
         R.origin = P + refl * EPSILON;
         R.dir = refl;
 
-        push(stack, &R, depth + 1);
+        push(stack, &R, depth + 1, m->reflAmount * prevAmount);
     }
 
     return color;
@@ -126,14 +126,15 @@ static float4 recursivetrace(struct Scene *s, uint traceDepth, struct Ray *r)
 {
     struct RayStack stack;
     stack.top = 0;
-    push(&stack, r, 0);
+    push(&stack, r, 0, 1.f);
 
     float4 c = (float4)(0, 0, 0, 0);
 
     while(stack.top > 0)
     {
         stack.top--;
-        c += raytrace(s, &stack, traceDepth, &stack.r[stack.top], stack.depth[stack.top]);
+        c += (float4)(stack.contribAmount[stack.top]) * raytrace(s, &stack, traceDepth,
+                &stack.r[stack.top], stack.depth[stack.top], stack.contribAmount[stack.top]);
     }
 
     return c;
