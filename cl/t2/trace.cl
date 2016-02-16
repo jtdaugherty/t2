@@ -104,7 +104,7 @@ static float4 raytrace(struct Scene *s, struct RayStack *stack, uint traceDepth,
 
             lColor = (float4)(light->strength) * light->color;
             color += angle * m->diff * m->amb * lColor
-                + powr(fmax(0.f, sv), m->spec) * lColor * m->specAmount;
+                + native_powr(fmax(0.f, sv), m->spec) * lColor * m->specAmount;
         }
     }
 

@@ -17,7 +17,7 @@ static int sphereintersect(struct Sphere *s, struct Ray *r, float *dist)
     if (disc < 0) {
         return 0;
     } else {
-        float e = sqrt(disc);
+        float e = native_sqrt(disc);
         float denom = 2.0 * a;
         float t = (-b - e) / denom;
 
