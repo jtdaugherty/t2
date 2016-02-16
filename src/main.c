@@ -25,7 +25,7 @@
 struct state programState = {
     .position = { { 0, 1.0, -5.0 } },
     .heading = { { 0.0, 0.0, 1.0 } },
-    .lens_radius = 0.07,
+    .lens_radius = 0,
     .sampleNum = 0,
     .show_overlay = 1,
     .last_frame_time = -1
