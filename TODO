@@ -21,6 +21,8 @@
 - Use window dimensions to aid in adjusting camera parameters
   (perspective distortion is extreme for some window sizes)
 - Add shortcut keys for adjusting the focal and view distances
+- When running in fullscreen mode, scale overlay text size as a function
+  of window size (want constant height in pixels rather than texels)
 
 Other:
 - Path tracing w/environment lights, concave spheres
