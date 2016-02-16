@@ -581,14 +581,14 @@ int main(int argc, char **argv)
             }
 
             // Before returning the objects to OpenGL, we sync to make sure OpenCL is done.
+            clFinish(command_queue);
+
             ret = clEnqueueReleaseGLObjects(command_queue, 1, &texmemRead, 0, NULL, NULL);
             ret |= clEnqueueReleaseGLObjects(command_queue, 1, &texmemWrite, 0, NULL, NULL);
             if (ret) {
                 log_error("Could not enqueue GL object releases, ret %d", ret);
                 exit(1);
             }
-
-            clFinish(command_queue);
 
             programState.sampleNum += batchSize;
             markStateDirty();
