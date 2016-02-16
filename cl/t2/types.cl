@@ -106,7 +106,7 @@ struct IntersectionResult
     float3 normal;
     float3 position;
     float distance;
-    struct Material *material;
+    __local struct Material *material;
 };
 
 #endif

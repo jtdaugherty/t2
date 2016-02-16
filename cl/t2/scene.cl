@@ -2,7 +2,7 @@
 #include <t2/types.cl>
 #include <t2/thinlens_camera.cl>
 
-static void buildscene(struct Scene *s)
+static void buildscene(__local struct Scene *s)
 {
     s->cameraType = CAMERA_THINLENS;
     s->cameras.thinLens.up = (float3)(0, 1, 0);

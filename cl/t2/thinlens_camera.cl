@@ -6,14 +6,14 @@
 #include <t2/trace.cl>
 #include <t2/config.cl>
 
-static void thinlens_camera_compute_uvw(struct ThinLensCamera *camera)
+static void thinlens_camera_compute_uvw(__local struct ThinLensCamera *camera)
 {
     camera->w = normalize(camera->eye - camera->lookat);
     camera->u = normalize(cross(camera->up, camera->w));
     camera->v = cross(camera->w, camera->u);
 }
 
-static float3 thinlens_camera_ray_direction(struct ThinLensCamera *camera, float2 pixelPoint, float2 lensPoint)
+static float3 thinlens_camera_ray_direction(__local struct ThinLensCamera *camera, float2 pixelPoint, float2 lensPoint)
 {
     float2 p = (float2)(0);
     p.x = pixelPoint.x * (camera->fpdist / camera->vpdist);
@@ -25,7 +25,7 @@ static float3 thinlens_camera_ray_direction(struct ThinLensCamera *camera, float
 }
 
 static float4 thinlens_camera_render(
-        struct ThinLensCamera *camera, struct Scene *scene,
+        __local struct ThinLensCamera *camera, __local struct Scene *scene,
         __constant struct configuration *config,
         int2 coord,
         float2 squareSample, float2 diskSample)

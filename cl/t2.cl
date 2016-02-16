@@ -19,7 +19,7 @@ __kernel void raytracer(
         int numSampleSets,
         uint batchSize)
 {
-    struct Scene s;
+    __local struct Scene s;
     buildscene(&s);
 
     int2 pos = (int2)(get_global_id(0), get_global_id(1));

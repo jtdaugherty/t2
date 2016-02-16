@@ -1,7 +1,7 @@
 
 #include <t2/types.cl>
 
-static int planeintersect(struct Plane *p, struct Ray *r, float *dist)
+static int planeintersect(__local struct Plane *p, struct Ray *r, float *dist)
 {
     float denom = dot(r->dir, p->normal);
 

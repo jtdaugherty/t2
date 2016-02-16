@@ -11,7 +11,7 @@ static float3 reflect(float3 A, float3 B)
     return B - ((float3)2) * (float3)dot(A, B) * A;
 }
 
-static int findintersection(struct Scene *s, struct Ray *r,
+static int findintersection(__local struct Scene *s, struct Ray *r,
         struct IntersectionResult *intersection)
 {
     if (intersection) {
@@ -63,7 +63,7 @@ static int findintersection(struct Scene *s, struct Ray *r,
         return 0;
 }
 
-static int shadowRayHit(struct Scene *s, float3 L, float3 P)
+static int shadowRayHit(__local struct Scene *s, float3 L, float3 P)
 {
     struct Ray light;
     light.origin = P;
@@ -72,7 +72,7 @@ static int shadowRayHit(struct Scene *s, float3 L, float3 P)
     return findintersection(s, &light, 0);
 }
 
-static float4 raytrace(struct Scene *s, struct RayStack *stack, uint traceDepth,
+static float4 raytrace(__local struct Scene *s, struct RayStack *stack, uint traceDepth,
         struct Ray *r, uint depth, float prevAmount)
 {
     float4 color = (float4)(0, 0, 0, 0);
@@ -84,14 +84,14 @@ static float4 raytrace(struct Scene *s, struct RayStack *stack, uint traceDepth,
 
     if (result == 0) return color;
 
-    struct Material *m  = intersection.material;
+    __local struct Material *m  = intersection.material;
     float3 P = intersection.position;
     float3 N = intersection.normal;
 
     float angle, sv;
     float3 L;
     float4 lColor;
-    struct Light *light;
+    __local struct Light *light;
 
     for (uint i = 0; i < s->numLights; i++)
     {
@@ -122,7 +122,7 @@ static float4 raytrace(struct Scene *s, struct RayStack *stack, uint traceDepth,
     return color;
 }
 
-static float4 recursivetrace(struct Scene *s, uint traceDepth, struct Ray *r)
+static float4 recursivetrace(__local struct Scene *s, uint traceDepth, struct Ray *r)
 {
     struct RayStack stack;
     stack.top = 0;
