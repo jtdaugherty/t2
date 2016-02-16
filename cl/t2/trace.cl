@@ -108,7 +108,7 @@ static float4 raytrace(struct Scene *s, struct RayStack *stack, uint traceDepth,
         }
     }
 
-    if (m->refl > 0 && m->reflAmount > 0 && prevAmount > 0)
+    if (depth < traceDepth && m->refl > 0 && m->reflAmount > 0 && prevAmount > 0)
     {
         float3 refl = reflect(N, r->dir);
 
