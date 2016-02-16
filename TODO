@@ -18,6 +18,9 @@
   image height + height of overlay)
 - main(): do one GL acquire/release by allocating relevant GL objects
   adjacently
+- Use window dimensions to aid in adjusting camera parameters
+  (perspective distortion is extreme for some window sizes)
+- Add shortcut keys for adjusting the focal and view distances
 
 Other:
 - Path tracing w/environment lights, concave spheres
