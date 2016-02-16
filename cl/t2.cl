@@ -23,7 +23,6 @@ __kernel void raytracer(
     buildscene(&s);
 
     int2 pos = (int2)(get_global_id(0), get_global_id(1));
-    float4 origCVal = (float4)(0.f);
 
     // newCVal is where we store the current color.
     float4 newCVal = (float4)(0.f);
@@ -76,8 +75,7 @@ __kernel void raytracer(
         // If this isn't the first sample for this frame, read the
         // previous sample data from the input image. Otherwise we take
         // the current sample as the first sample.
-        origCVal = read_imagef(input, pos);
-        newCVal = (origCVal * (float)state->sampleNum + newCVal) /
+        newCVal = (read_imagef(input, pos) * (float)state->sampleNum + newCVal) /
             ((float)state->sampleNum + (float)batchSize);
     } else if (batchSize > 1)
         newCVal /= (float4)(batchSize);
