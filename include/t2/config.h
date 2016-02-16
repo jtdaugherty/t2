@@ -22,6 +22,9 @@ struct configuration {
 
     // Batch size: number of samples per kernel invocation
     int batchSize;
+
+    // Whether sampling is paused
+    int paused;
 };
 
 #endif

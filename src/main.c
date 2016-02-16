@@ -38,7 +38,8 @@ struct configuration config = {
     .width = 800,
     .height = 600,
     .logLevel = LOG_INFO,
-    .batchSize = 1
+    .batchSize = 1,
+    .paused = 0
 };
 
 struct sample_data {
@@ -79,6 +80,10 @@ cl_context context = NULL;
 /* Store the old configured batch size here while a key or mouse button
 is held down */
 cl_uint oldBatchSize = -1;
+
+/* Store the old configured sample root here while progressive
+rendering is paused */
+cl_uint oldSampleRoot = -1;
 
 /* Last known mouse cursor position for computing deltas during mouse
 movement */
@@ -268,9 +273,28 @@ static void key_callback(GLFWwindow* window, int key, int scancode,
 #define INCREASE_DEPTH  (PRESS(GLFW_KEY_EQUAL) && SHIFT)
 #define DECREASE_RADIUS (PRESS(GLFW_KEY_R) && (!SHIFT))
 #define INCREASE_RADIUS (PRESS(GLFW_KEY_R) && SHIFT)
+#define TOGGLE_SAMPLING (PRESS(GLFW_KEY_SPACE))
 #define TOGGLE_OVERLAY  (PRESS(GLFW_KEY_O))
 #define DECREASE_SAMPLE_ROOT (PRESS(GLFW_KEY_T) && (!SHIFT))
 #define INCREASE_SAMPLE_ROOT (PRESS(GLFW_KEY_T) && SHIFT)
+
+    if (TOGGLE_SAMPLING) {
+        if (oldSampleRoot == -1) {
+            log_debug("Lowering sample root to 1");
+            oldSampleRoot = config.sampleRoot;
+            config.sampleRoot = 1;
+            config.paused = 1;
+            markConfigDirty();
+            restartRendering();
+        } else {
+            log_debug("Restoring sample root to %d", oldSampleRoot);
+            config.sampleRoot = oldSampleRoot;
+            oldSampleRoot = -1;
+            config.paused = 0;
+            markConfigDirty();
+            restartRendering();
+        }
+    }
 
     if (action == GLFW_PRESS) {
         SET_BIT(button_mask, KB_PRESSED);

@@ -46,6 +46,8 @@ Keyboard Controls
 * `r`/`R` - Decrease/increase lens radius
 * `o` - Toggle overlay display
 * `t`/`T` - Decrease/increase sample root
+* `Space` - Pause/resume progressive sampling (useful when batch sizes
+  result in jerky movement)
 
 Mouse Controls
 --------------

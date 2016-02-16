@@ -10,6 +10,7 @@ struct configuration {
     int height;
     int _unused_logLevel;
     int _unused_batchSize;
+    int _unused_paused;
 };
 
 #endif

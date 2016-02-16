@@ -39,9 +39,10 @@ void render_overlay(struct configuration *config, struct state *programState)
     int left = 5;
 #define ROWS(n) (n * rowHeight)
 
-    len = snprintf(msg, sizeof(msg), "%d/%d sample%s | radius %f | depth %d",
+    len = snprintf(msg, sizeof(msg), "%d/%d sample%s%s | radius %f | depth %d",
             programState->sampleNum, config->sampleRoot * config->sampleRoot,
             (config->sampleRoot == 1 ? "" : "s"),
+            (config->paused ? "*" : ""),
             programState->lens_radius,
             config->traceDepth);
 
