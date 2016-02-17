@@ -280,14 +280,14 @@ static void key_callback(GLFWwindow* window, int key, int scancode,
 #define INCREASE_SAMPLE_ROOT (PRESS(GLFW_KEY_T) && SHIFT)
 
     if (TOGGLE_SAMPLING) {
-        if (oldSampleRoot == -1) {
+        if ((oldSampleRoot == -1) && (config.sampleRoot > 1)) {
             log_debug("Lowering sample root to 1");
             oldSampleRoot = config.sampleRoot;
             config.sampleRoot = 1;
             config.paused = 1;
             markConfigDirty();
             restartRendering();
-        } else {
+        } else if (oldSampleRoot != -1) {
             log_debug("Restoring sample root to %d", oldSampleRoot);
             config.sampleRoot = oldSampleRoot;
             oldSampleRoot = -1;
