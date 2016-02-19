@@ -20,7 +20,11 @@ __kernel void raytracer(
         uint batchSize)
 {
     __local struct Scene s;
-    buildscene(&s);
+
+    if ((get_local_id(0) == 0) & (get_local_id(1) == 0))
+        buildscene(&s);
+
+    barrier(CLK_LOCAL_MEM_FENCE);
 
     int2 pos = (int2)(get_global_id(0), get_global_id(1));
 
