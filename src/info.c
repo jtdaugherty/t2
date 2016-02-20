@@ -19,9 +19,12 @@ cl_int logDeviceInfo(cl_device_id device_id)
 
     char vendorName[1024] = {0};
     char deviceName[1024] = {0};
+    size_t maxWorkGroupSize = 0;
 
     ret = clGetDeviceInfo(device_id, CL_DEVICE_VENDOR, sizeof(vendorName), vendorName, NULL);
     ret |= clGetDeviceInfo(device_id, CL_DEVICE_NAME, sizeof(deviceName), deviceName, NULL);
+    ret |= clGetDeviceInfo(device_id, CL_DEVICE_MAX_WORK_GROUP_SIZE, sizeof(maxWorkGroupSize),
+            &maxWorkGroupSize, NULL);
     if (ret) {
         log_error("Failed to get device info, ret %d", ret);
         return ret;
@@ -30,13 +33,14 @@ cl_int logDeviceInfo(cl_device_id device_id)
     log_info("OpenCL device details:");
     log_info("  Name: %s", deviceName);
     log_info("  Vendor: %s", vendorName);
-    log_info("  Extensions:");
+    log_info("  Maximum work group size: %ld", maxWorkGroupSize);
 
     char *start = extension_list;
     char *found = NULL;
     char extName[128];
     int len = 0;
 
+    log_info("  Extensions:");
     while ((found = strchr(start, ' ')) != NULL) {
         len = found - start;
         memcpy(extName, start, len);
