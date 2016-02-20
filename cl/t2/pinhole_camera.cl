@@ -2,14 +2,14 @@
 #include <t2/types.cl>
 #include <t2/config.cl>
 
-static void pinhole_camera_compute_uvw(__local struct PinholeCamera *camera)
+static void pinhole_camera_compute_uvw(struct PinholeCamera *camera)
 {
     camera->w = normalize(camera->eye - camera->lookat);
     camera->u = normalize(cross(camera->up, camera->w));
     camera->v = cross(camera->w, camera->u);
 }
 
-static float3 pinhole_camera_ray_direction(__local struct PinholeCamera *camera, float2 point)
+static float3 pinhole_camera_ray_direction(struct PinholeCamera *camera, float2 point)
 {
     return normalize((point.x * camera->u) +
                      (point.y * camera->v) -
@@ -17,7 +17,7 @@ static float3 pinhole_camera_ray_direction(__local struct PinholeCamera *camera,
 }
 
 static float4 pinhole_camera_render(
-        __local struct PinholeCamera *camera, __local struct Scene *scene,
+        struct PinholeCamera *camera, __local struct Scene *scene,
         __constant struct configuration *config,
         int2 coord, float2 squareSample)
 {

@@ -21,21 +21,23 @@ __kernel void raytracer(
 {
     __local struct Scene s;
 
-    if ((get_local_id(0) == 0) & (get_local_id(1) == 0))
+    local int sampleSetSize;
+
+    if ((get_local_id(0) == 0) & (get_local_id(1) == 0)) {
         buildscene(&s);
+        sampleSetSize = config->sampleRoot * config->sampleRoot;
+    }
 
     barrier(CLK_LOCAL_MEM_FENCE);
 
     int2 pos = (int2)(get_global_id(0), get_global_id(1));
+    int sampleSetIndex = ((pos.x * config->height) + pos.y) % numSampleSets;
 
     // newCVal is where we store the current color.
     float4 newCVal = (float4)(0.f);
 
     float2 squareSample;
     float2 diskSample;
-
-    int sampleSetSize = config->sampleRoot * config->sampleRoot;
-    int sampleSetIndex = ((pos.x * config->height) + pos.y) % numSampleSets;
 
     // Compute the sample set offset in the sample set buffers based
     // on the coordinates of the current pixel being traced.
@@ -45,16 +47,21 @@ __kernel void raytracer(
     __global float2 *squareSamples = squareSampleSets + offset;
     __global float2 *diskSamples = diskSampleSets + offset;
 
+    struct PinholeCamera pinhole;
+    struct ThinLensCamera thinLens;
+
     // Configure camera
     if (s.cameraType == CAMERA_THINLENS) {
-        s.cameras.thinLens.eye = state->position;
-        s.cameras.thinLens.lookat = state->position + state->heading;
-        s.cameras.thinLens.lens_radius = state->lens_radius;
-        thinlens_camera_compute_uvw(&s.cameras.thinLens);
+        thinLens = s.cameras.thinLens;
+        thinLens.eye = state->position;
+        thinLens.lookat = state->position + state->heading;
+        thinLens.lens_radius = state->lens_radius;
+        thinlens_camera_compute_uvw(&thinLens);
     } else if (s.cameraType == CAMERA_PINHOLE) {
-        s.cameras.pinhole.eye = state->position;
-        s.cameras.pinhole.lookat = state->position + state->heading;
-        pinhole_camera_compute_uvw(&s.cameras.pinhole);
+        pinhole = s.cameras.pinhole;
+        pinhole.eye = state->position;
+        pinhole.lookat = state->position + state->heading;
+        pinhole_camera_compute_uvw(&pinhole);
     }
 
     for (uint sampleNum = state->sampleNum;
@@ -65,10 +72,10 @@ __kernel void raytracer(
         diskSample = diskSamples[sampleNum];
 
         if (s.cameraType == CAMERA_THINLENS) {
-            newCVal += thinlens_camera_render(&s.cameras.thinLens, &s,
+            newCVal += thinlens_camera_render(&thinLens, &s,
                     config, pos, squareSample, diskSample);
         } else if (s.cameraType == CAMERA_PINHOLE) {
-            newCVal += pinhole_camera_render(&s.cameras.pinhole, &s,
+            newCVal += pinhole_camera_render(&pinhole, &s,
                     config, pos, squareSample);
         }
     }
