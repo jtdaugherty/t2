@@ -21,6 +21,7 @@ cl_int logDeviceInfo(cl_device_id device_id)
     char deviceName[1024] = {0};
     size_t maxWorkGroupSize = 0;
     size_t maxWorkItemDimensions = 0;
+    size_t deviceAddressBits = 0;
 
     ret = clGetDeviceInfo(device_id, CL_DEVICE_VENDOR, sizeof(vendorName), vendorName, NULL);
     ret |= clGetDeviceInfo(device_id, CL_DEVICE_NAME, sizeof(deviceName), deviceName, NULL);
@@ -28,6 +29,8 @@ cl_int logDeviceInfo(cl_device_id device_id)
             &maxWorkGroupSize, NULL);
     ret |= clGetDeviceInfo(device_id, CL_DEVICE_MAX_WORK_ITEM_DIMENSIONS, sizeof(maxWorkItemDimensions),
             &maxWorkItemDimensions, NULL);
+    ret |= clGetDeviceInfo(device_id, CL_DEVICE_ADDRESS_BITS, sizeof(deviceAddressBits),
+            &deviceAddressBits, NULL);
     if (ret) {
         log_error("Failed to get device info, ret %d", ret);
         return ret;
@@ -38,6 +41,7 @@ cl_int logDeviceInfo(cl_device_id device_id)
     log_info("  Vendor: %s", vendorName);
     log_info("  Maximum work item dimensions: %ld", maxWorkItemDimensions);
     log_info("  Maximum work group size: %ld", maxWorkGroupSize);
+    log_info("  Device address bits: %ld", deviceAddressBits);
 
     char *start = extension_list;
     char *found = NULL;
