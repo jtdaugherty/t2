@@ -11,7 +11,7 @@ CFLAGS = \
 		 $(shell pkg-config --cflags glew)
 
 LIBS = \
-	   -framework opencl \
+	   -framework opencl -framework OpenGL \
 	   $(shell pkg-config --static --libs glfw3) \
 	   $(shell pkg-config --libs freetype2) \
 	   $(shell pkg-config --static --libs glew)
