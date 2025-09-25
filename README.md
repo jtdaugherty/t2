@@ -16,7 +16,7 @@ Building
 
 Right now `t2` only builds on OS X. To install dependencies and build:
 ```
-$ brew install homebrew/versions/glfw3
+$ brew install glfw3
 $ brew install glew
 $ brew install freetype
 $ make
