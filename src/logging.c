@@ -4,7 +4,7 @@
 
 #include <t2/logging.h>
 
-const char * log_level_name(level)
+const char * log_level_name(int level)
 {
     switch (level) {
         case LOG_ERROR:
