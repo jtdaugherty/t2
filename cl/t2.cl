@@ -26,6 +26,8 @@ __kernel void raytracer(
     if ((get_local_id(0) == 0) & (get_local_id(1) == 0)) {
         buildscene(&s);
         sampleSetSize = config->sampleRoot * config->sampleRoot;
+    } else {
+        sampleSetSize = 0;
     }
 
     barrier(CLK_LOCAL_MEM_FENCE);
